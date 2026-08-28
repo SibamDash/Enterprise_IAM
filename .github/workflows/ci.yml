@@ -29,6 +29,9 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+      - name: Make mvnw executable
+        working-directory: backend
+        run: chmod +x mvnw
       - name: Run backend unit + integration tests
         working-directory: backend
         run: ./mvnw -B verify

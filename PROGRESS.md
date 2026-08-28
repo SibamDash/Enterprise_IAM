@@ -5,7 +5,7 @@
 | 0     | Project Foundation                        | DONE        | -           | -      |
 | 1     | Multi-Tenant Org + User Management        | DONE        | -           | -      |
 | 2     | Password Authentication                   | DONE        | -           | -      |
-| 3     | Token + Session Management                | NOT_STARTED | -           | -      |
+| 3     | Token + Session Management                | IN_PROGRESS | -           | -      |
 | 4     | RBAC + Permission System                  | NOT_STARTED | -           | -      |
 | 5     | Policy Engine / ABAC Foundation           | NOT_STARTED | -           | -      |
 | 6     | MFA                                       | NOT_STARTED | -           | -      |

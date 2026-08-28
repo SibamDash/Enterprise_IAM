@@ -141,6 +141,7 @@ Do **not** stop after the first implementation attempt if:
 **Keep looping — implement, run, observe failure, fix, re-run — until the feature works
 end-to-end.** There is no maximum retry count. A feature is not "attempted," it is
 either working and verified, or it is not done.
+always stop and ask permission for proceeding to next phase only after the current phase is completed and verified
 
 ## Rule 2 — Test both success and failure paths
 
@@ -229,6 +230,7 @@ This governs every other section:
 6. Phase 15 finishing does **not** mean the project is done. The project is only done
    once Phase 16 (Section 27) — which re-verifies the entire system as a whole — is
    also `DONE`.
+7. Always stop and ask permission for proceeding to next phase only after the current phase is completed and verified.
 
 ---
 

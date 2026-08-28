@@ -15,5 +15,5 @@ test('renders App component', () => {
     </QueryClientProvider>
   );
   // Just check if Dashboard title is present
-  expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
+  expect(screen.getAllByText(/Dashboard/i)[0]).toBeInTheDocument();
 });

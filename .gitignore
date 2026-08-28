@@ -1,0 +1,14 @@
+.env
+*.log
+
+# Backend
+backend/target/
+backend/*.iml
+backend/.idea
+backend/.vscode
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local

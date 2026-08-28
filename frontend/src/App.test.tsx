@@ -1,8 +1,19 @@
+import { expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 
-test('renders Get started header', () => {
-  render(<App />);
-  const headerElement = screen.getByText(/Get started/i);
-  expect(headerElement).toBeInTheDocument();
+const queryClient = new QueryClient();
+
+test('renders App component', () => {
+  render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+  // Just check if Dashboard title is present
+  expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
 });

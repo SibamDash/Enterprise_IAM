@@ -3,7 +3,7 @@
 | Phase | Name                                    | Status      | Verified On | Commit |
 |------:|-------------------------------------------|-------------|-------------|--------|
 | 0     | Project Foundation                        | DONE        | -           | -      |
-| 1     | Multi-Tenant Org + User Management        | IN_PROGRESS | -           | -      |
+| 1     | Multi-Tenant Org + User Management        | DONE        | -           | -      |
 | 2     | Password Authentication                   | NOT_STARTED | -           | -      |
 | 3     | Token + Session Management                | NOT_STARTED | -           | -      |
 | 4     | RBAC + Permission System                  | NOT_STARTED | -           | -      |

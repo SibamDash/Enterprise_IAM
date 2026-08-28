@@ -5,6 +5,8 @@ import com.enterprise.iam.dto.LoginRequest;
 import com.enterprise.iam.repository.UserRepository;
 import com.enterprise.iam.security.LoginAttemptService;
 import com.enterprise.iam.security.TenantContextHolder;
+import com.enterprise.iam.repository.SessionRepository;
+import com.enterprise.iam.security.JwtTokenProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,12 @@ public class AuthServiceTest {
     @Mock
     private StringRedisTemplate redisTemplate;
 
+    @Mock
+    private SessionRepository sessionRepository;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+
     @InjectMocks
     private AuthService authService;
 
@@ -60,6 +68,7 @@ public class AuthServiceTest {
         request.setPassword("password");
 
         User user = new User();
+        user.setId(UUID.randomUUID());
         user.setEmail("test@example.com");
         user.setStatus("ACTIVE");
         user.setPasswordHash("hashed_password");
@@ -68,11 +77,13 @@ public class AuthServiceTest {
         when(loginAttemptService.isBlocked(anyString())).thenReturn(false);
         when(userRepository.findByEmailAndOrganizationId(request.getEmail(), tenantId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password", "hashed_password")).thenReturn(true);
+        when(jwtTokenProvider.generateToken(any(), any(), anyString())).thenReturn("mock_token");
 
-        authService.authenticate(request);
+        authService.authenticate(request, "UserAgent", "127.0.0.1");
 
         verify(loginAttemptService).loginSucceeded(anyString());
         verify(loginAttemptService, never()).loginFailed(anyString());
+        verify(sessionRepository).save(any());
     }
 
     @Test
@@ -84,7 +95,7 @@ public class AuthServiceTest {
         when(loginAttemptService.isBlocked(anyString())).thenReturn(false);
         when(userRepository.findByEmailAndOrganizationId(request.getEmail(), tenantId)).thenReturn(Optional.empty());
 
-        assertThrows(SecurityException.class, () -> authService.authenticate(request));
+        assertThrows(SecurityException.class, () -> authService.authenticate(request, "UserAgent", "127.0.0.1"));
 
         verify(loginAttemptService).loginFailed(anyString());
     }
@@ -97,6 +108,6 @@ public class AuthServiceTest {
 
         when(loginAttemptService.isBlocked(anyString())).thenReturn(true);
 
-        assertThrows(SecurityException.class, () -> authService.authenticate(request));
+        assertThrows(SecurityException.class, () -> authService.authenticate(request, "UserAgent", "127.0.0.1"));
     }
 }

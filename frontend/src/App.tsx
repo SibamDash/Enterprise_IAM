@@ -4,10 +4,12 @@ import Dashboard from './pages/Dashboard';
 import OrganizationList from './pages/organizations/OrganizationList';
 import CreateOrganization from './pages/organizations/CreateOrganization';
 import UserList from './pages/users/UserList';
+import CreateUser from './pages/users/CreateUser';
 import AuthLayout from './layouts/AuthLayout';
 import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import Sessions from './pages/settings/Sessions';
 import './App.css';
 
 function App() {
@@ -25,6 +27,7 @@ function App() {
         <Route path="organizations/new" element={<CreateOrganization />} />
         <Route path="users" element={<UserList />} />
         <Route path="users/new" element={<CreateUser />} />
+        <Route path="sessions" element={<Sessions />} />
       </Route>
     </Routes>
   );

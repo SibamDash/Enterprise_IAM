@@ -1,6 +1,40 @@
 # Enterprise IAM — Implementation Specification for Antigravity
 
-Repository: https://github.com/SibamDash/Enterprise_IAM.git
+## 🔒 LOCKED REPOSITORY IDENTITY — READ THIS FIRST, EVERY SESSION
+
+```text
+CANONICAL_REPO_URL   = https://github.com/SibamDash/Enterprise_IAM.git
+CANONICAL_REPO_NAME  = Enterprise_IAM
+CANONICAL_LOCAL_DIR  = Enterprise_IAM
+```
+
+This is the **only** repository this project is ever pushed to, cloned from, or
+configured against. No other URL, no shortened name (e.g. `IAM`, `iam-platform`,
+`enterprise-iam-app`), no newly-created repository, and no forked/renamed variant is
+ever acceptable — even if it looks similar, even if it seems more "conventional," and
+even if a tool or CLI defaults to a different name.
+
+**Mandatory check, every single session, before any git command that touches a
+remote:**
+
+```bash
+git remote -v
+```
+
+- If `origin` does not resolve to exactly `CANONICAL_REPO_URL` above → **STOP.** Do
+  not push, do not create a new repository, do not silently fix it by pushing anyway.
+  Fix the remote (`git remote set-url origin <CANONICAL_REPO_URL>`) or, if the local
+  directory itself is wrong, stop and surface the mismatch to the user before
+  proceeding.
+- Never run `gh repo create`, `git init` against a new GitHub repo, or any command
+  that would provision a *different* repository for this project. The repository
+  already exists at `CANONICAL_REPO_URL`; Antigravity's job is to clone/use it, never
+  to create a substitute.
+- Every reference to "the repository" anywhere else in this document — in Section 4,
+  in every phase's Git Checkpoint, in `PROGRESS.md`, in CI/CD config, in Docker image
+  tags — means this exact repository. If any generated file, script, or command would
+  reference a different name, treat that as a bug and correct it before proceeding,
+  not after.
 
 > **Read this entire document before writing any code.** Sections 1–7 are operating
 > rules — testing, Docker, and CI/CD are not optional add-ons, they are binding
@@ -158,7 +192,25 @@ Do NOT:
 If a security test fails, fix the implementation — never fix the test to accept the
 insecure behavior, and never delete/skip/comment-out a failing test to get to green.
 
-## Rule 4 — One phase at a time, and never move on while it is broken
+## Rule 4 — Follow this specification literally; never improvise around it
+
+This document is the single source of truth for names, scope, structure, and
+sequence. When anything in this document gives an exact value — a repository URL, a
+service name, a file path, a phase order, a schema, an endpoint shape — that value is
+binding, not a suggestion to be reinterpreted or "improved."
+
+- Never substitute a different name, path, tool, library, repository, or structural
+  choice than what this document specifies, even if a default, template, or CLI
+  convention would produce something different or more familiar-looking.
+- Never invent scope that isn't in this document, and never quietly drop or shrink
+  scope that is.
+- If something in this document is genuinely ambiguous or contradicts itself, stop and
+  surface that ambiguity to the user rather than silently resolving it with a guess.
+- If Antigravity is about to take an action whose name/target/value doesn't appear
+  verbatim (or as a clearly-derived form) in this document, treat that as a signal to
+  re-check this document before proceeding, not as a normal design decision.
+
+## Rule 5 — One phase at a time, and never move on while it is broken
 
 This governs every other section:
 
@@ -218,6 +270,9 @@ A phase may only be set to `DONE` once every item in Section 2.3 is checked.
 
 Before writing a single line of code in a session, Antigravity must:
 
+0. Run `git remote -v` and confirm `origin` matches `CANONICAL_REPO_URL` exactly (see
+   the locked repository identity block at the top of this document). Do not proceed
+   on a mismatch — fix the remote or stop and ask.
 1. Open `PROGRESS.md`.
 2. Find the **first row from the top that is not `DONE`**. That row is the only phase
    you are allowed to work on right now.
@@ -255,6 +310,8 @@ true:
 - [ ] Documentation updated (README and/or module docs)
 - [ ] `PROGRESS.md` row updated with date and commit hash
 - [ ] Git commit created
+- [ ] `git remote -v` confirmed to be exactly `CANONICAL_REPO_URL`
+      (`https://github.com/SibamDash/Enterprise_IAM.git`) **before** pushing
 - [ ] GitHub push to `SibamDash/Enterprise_IAM.git` successful and `git status` is clean
 
 If **any** box is unchecked:
@@ -278,6 +335,14 @@ to trigger this.
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
+
+echo "==> Verifying remote identity"
+EXPECTED="https://github.com/SibamDash/Enterprise_IAM.git"
+ACTUAL="$(git remote get-url origin)"
+if [ "$ACTUAL" != "$EXPECTED" ]; then
+  echo "FATAL: origin is '$ACTUAL', expected '$EXPECTED'. Refusing to proceed." >&2
+  exit 1
+fi
 
 echo "==> Syncing with remote"
 git fetch origin
@@ -324,7 +389,7 @@ automatically, with no user prompt required.
 | Bootstrap passes cleanly, no uncommitted changes | Proceed directly to Section 2.2 — resume the first non-`DONE` phase. |
 | Uncommitted changes exist, belonging to the current `IN_PROGRESS` phase | Do not assume they are correct or finished. Re-run that phase's tests specifically, then the full regression suite, before continuing new work or marking anything `DONE`. |
 | Uncommitted changes exist but don't obviously match the `IN_PROGRESS` phase | Stop and inspect before writing any new code. Do not silently delete or silently keep — understand what they are first. If they're clearly abandoned scratch work, remove them only after confirming the tree returns to a passing state without them. |
-| A phase marked `DONE` now fails the regression suite (**state drift**) | Treat it as broken, not done. Immediately set its `PROGRESS.md` status to `BLOCKED (regression failure — see <date>)` and fix it before any further phase work, even if a "later" phase looks tempting to jump to. This is a Rule 4 violation if ignored. |
+| A phase marked `DONE` now fails the regression suite (**state drift**) | Treat it as broken, not done. Immediately set its `PROGRESS.md` status to `BLOCKED (regression failure — see <date>)` and fix it before any further phase work, even if a "later" phase looks tempting to jump to. This is a Rule 5 violation if ignored. |
 | `PROGRESS.md` says a phase is `IN_PROGRESS` but Git history shows it was actually pushed complete | Re-run its tests to confirm before trusting either signal; update `PROGRESS.md` to match whichever the tests confirm. |
 | Docker stack fails to build/start during bootstrap | Treat exactly like a regression failure — fix before any new feature work. |
 
@@ -454,19 +519,24 @@ looping until everything above passes — then, and only then, advance.
 
 # 4. Git Workflow
 
-Repository:
+Repository (see the locked identity block at the top of this document — this is not
+repeated for convenience, it is the same single source of truth):
 
 ```text
 https://github.com/SibamDash/Enterprise_IAM.git
 ```
 
-All code for this project is pushed to this repository, and only this repository.
+All code for this project is pushed to this repository, and only this repository. If
+this repository does not yet exist locally, **clone the existing one** — never create
+a new GitHub repository under a different or shortened name, and never `git init` a
+fresh repo as a substitute.
 
 ## 4.1 One-time setup
 
 ```bash
 git clone https://github.com/SibamDash/Enterprise_IAM.git
 cd Enterprise_IAM
+git remote -v   # must show SibamDash/Enterprise_IAM.git for both fetch and push
 ```
 
 ## 4.2 Before starting work in any session
@@ -782,7 +852,7 @@ curl -f http://localhost:8080/api/v1/health   # 200 OK
 ```
 
 If any of the above fails, the phase is not done — fix the Docker configuration before
-proceeding, per Rule 4.
+proceeding, per Rule 5.
 
 ---
 
@@ -2472,7 +2542,10 @@ Phase 16 is complete** — this is the target system, not merely a login service
 Keep this near you as a one-glance summary of Sections 1–7:
 
 ```text
-0. At the START of every session, automatically (never wait to be told): run
+0a. Before ANYTHING else, every session: `git remote -v` must equal
+    https://github.com/SibamDash/Enterprise_IAM.git exactly. Never push to, or
+    create, any other repository — no shortened name, no substitute. Mismatch = stop.
+0b. At the START of every session, automatically (never wait to be told): run
    scripts/session-bootstrap.sh — pull latest, check for leftover uncommitted work,
    and run the full regression suite to confirm PROGRESS.md matches reality. If it
    doesn't (state drift), fix that before anything else.

@@ -34,6 +34,31 @@ export default function DashboardLayout() {
             <Users size={20} />
             Users
           </NavLink>
+          <NavLink to="/sessions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Shield size={20} />
+            Sessions
+          </NavLink>
+          <button 
+            className="nav-link" 
+            style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', marginTop: 'auto' }}
+            onClick={() => {
+              import('../api/client').then(({ apiClient, clearTokens }) => {
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (refreshToken) {
+                  apiClient.post('/api/v1/auth/logout', { refreshToken }).finally(() => {
+                    clearTokens();
+                    window.location.href = '/login';
+                  });
+                } else {
+                  clearTokens();
+                  window.location.href = '/login';
+                }
+              });
+            }}
+          >
+            <UserCircle size={20} />
+            Logout
+          </button>
         </nav>
       </aside>
       

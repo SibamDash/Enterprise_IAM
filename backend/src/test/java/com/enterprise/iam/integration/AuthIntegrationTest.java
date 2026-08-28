@@ -101,7 +101,7 @@ public class AuthIntegrationTest {
         req.setPassword("SecureP@ssw0rd");
         
         // Should not throw
-        authService.authenticate(req);
+        authService.authenticate(req, "IntegrationTestAgent", "127.0.0.1");
     }
 
     @Test
@@ -112,12 +112,12 @@ public class AuthIntegrationTest {
 
         // Fail 5 times
         for (int i = 0; i < 5; i++) {
-            assertThrows(SecurityException.class, () -> authService.authenticate(req));
+            assertThrows(SecurityException.class, () -> authService.authenticate(req, "IntegrationTestAgent", "127.0.0.1"));
         }
 
         // 6th time should be locked, even if password is correct
         req.setPassword("SecureP@ssw0rd");
-        SecurityException e = assertThrows(SecurityException.class, () -> authService.authenticate(req));
+        SecurityException e = assertThrows(SecurityException.class, () -> authService.authenticate(req, "IntegrationTestAgent", "127.0.0.1"));
         assert e.getMessage().contains("locked");
     }
 }

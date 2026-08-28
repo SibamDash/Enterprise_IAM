@@ -1,9 +1,11 @@
 package com.enterprise.iam.controller;
 
+import com.enterprise.iam.dto.LoginResponse;
 import com.enterprise.iam.dto.ForgotPasswordRequest;
 import com.enterprise.iam.dto.LoginRequest;
 import com.enterprise.iam.dto.ResetPasswordRequest;
 import com.enterprise.iam.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,12 +20,36 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
-            authService.authenticate(request);
-            return ResponseEntity.ok().build();
+            String userAgent = httpRequest.getHeader("User-Agent");
+            String ipAddress = httpRequest.getRemoteAddr();
+            LoginResponse response = authService.authenticate(request, userAgent, ipAddress);
+            return ResponseEntity.ok(response);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody com.enterprise.iam.dto.RefreshRequest request, HttpServletRequest httpRequest) {
+        try {
+            String userAgent = httpRequest.getHeader("User-Agent");
+            String ipAddress = httpRequest.getRemoteAddr();
+            LoginResponse response = authService.refreshToken(request, userAgent, ipAddress);
+            return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody com.enterprise.iam.dto.RefreshRequest request) {
+        try {
+            authService.logout(request.getRefreshToken());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.ok().build(); // Always return ok to prevent enumeration
         }
     }
 
@@ -38,9 +64,7 @@ public class AuthController {
         try {
             authService.resetPassword(request);
             return ResponseEntity.ok().build();
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (IllegalArgumentException e) {
+        } catch (SecurityException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }

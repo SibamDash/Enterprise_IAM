@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { apiClient, setTenantId } from '../../api/client';
+import { apiClient, setTenantId, setTokens } from '../../api/client';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -21,10 +21,15 @@ export default function Login() {
       setTenantId(formData.tenantId);
       localStorage.setItem('tenantId', formData.tenantId);
       
-      await apiClient.post('/api/v1/auth/login', {
+      const response = await apiClient.post('/api/v1/auth/login', {
         email: formData.email,
         password: formData.password
       });
+
+      const { accessToken, refreshToken } = response.data;
+      if (accessToken && refreshToken) {
+        setTokens(accessToken, refreshToken);
+      }
 
       navigate('/');
     } catch (err: any) {

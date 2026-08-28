@@ -1,5 +1,7 @@
 # Enterprise IAM Platform
 
+Enterprise IAM is a modern, multi-tenant Identity and Access Management platform designed for enterprise applications. It features robust Role-Based Access Control (RBAC), token-based authentication, and session management, built on top of a Spring Boot backend and a React frontend with PostgreSQL.
+
 A production-style, multi-tenant Enterprise Identity and Access Management (IAM) platform built with Spring Boot, React, and PostgreSQL.
 
 ## Features

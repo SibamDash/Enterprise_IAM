@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo "==> Verifying remote identity"
+EXPECTED="https://github.com/SibamDash/Enterprise_IAM.git"
+ACTUAL="$(git remote get-url origin)"
+if [ "$ACTUAL" != "$EXPECTED" ]; then
+  echo "FATAL: origin is '$ACTUAL', expected '$EXPECTED'. Refusing to proceed." >&2
+  exit 1
+fi
+
 echo "==> Syncing with remote"
 git fetch origin || echo "Skipping fetch, no remote"
 git pull origin main || echo "Skipping pull, maybe no remote or branch"

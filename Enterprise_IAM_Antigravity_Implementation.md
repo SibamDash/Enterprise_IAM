@@ -85,8 +85,7 @@ safe — it re-verifies real system state against `PROGRESS.md` at the start of 
 session, automatically, so a restart, crash, or new chat can never silently continue
 from an incorrect assumption about what's actually done. This automatic
 re-verification does **not** override Rule 6: Antigravity still must stop and get
-explicit user confirmation before advancing past any completed step, even one it just
-finished re-verifying on its own.
+explicit user confirmation before starting the next phase.
 
 ---
 
@@ -195,6 +194,64 @@ Do NOT:
 If a security test fails, fix the implementation — never fix the test to accept the
 insecure behavior, and never delete/skip/comment-out a failing test to get to green.
 
+## Rule 3A — Evidence over assertion; no guessing, no hallucinated completion
+
+Antigravity must distinguish between **implemented**, **tested**, **verified**, and
+**assumed**. Only observed evidence may be used to claim completion.
+
+Mandatory behavior:
+
+- Never claim a test passed without actually running it and observing a successful exit
+  code.
+- Never claim Docker is healthy without checking container health/status and the required
+  health endpoints.
+- Never claim CI is green without inspecting the GitHub Actions result for the exact
+  pushed commit.
+- Never claim a GitHub push succeeded without checking the result of the push and then
+  verifying the remote commit/working tree.
+- Never invent an API response, database record, token, UI result, file, package,
+  configuration value, or CI result.
+- Never infer that an untested code path works merely because a similar path works.
+- If something cannot be verified, write `UNVERIFIED` and keep the phase open.
+- If evidence contradicts `PROGRESS.md`, trust the evidence and repair the state record.
+- If a command fails because a tool, dependency, credential, service, or environment is
+  unavailable, do not fabricate a successful result. Record the exact blocker and stop
+  only when the blocker genuinely requires user intervention.
+
+### Required verification evidence
+
+For each feature, create:
+
+```text
+evidence/
+  phase-N/
+    feature-<name>/
+      README.md
+      test-results.txt
+      api-results.txt        # when applicable
+      docker-results.txt     # when applicable
+      ci-results.txt         # phase gate
+      screenshots/           # UI evidence when applicable
+```
+
+The exact files may be fewer when a category does not apply, but the feature's
+`README.md` must list the commands executed, their result, and the evidence location.
+
+A feature is not COMPLETE without objective evidence.
+
+### Evidence hierarchy
+
+When sources disagree, use this order of authority:
+
+1. Actual repository state and executed test output.
+2. This implementation specification.
+3. Explicitly observed GitHub/Docker/tool output.
+4. Official documentation for a dependency when the specification requires clarification.
+5. Never memory, assumptions, or guessed behavior.
+
+Do not "fix" a discrepancy by editing the evidence to match the expected result. Fix the
+implementation or record the discrepancy as a blocker.
+
 ## Rule 4 — Follow this specification literally; never improvise around it
 
 This document is the single source of truth for names, scope, structure, and
@@ -233,30 +290,101 @@ This governs every other section:
    once Phase 16 (Section 27) — which re-verifies the entire system as a whole — is
    also `DONE`.
 
-## Rule 6 — Ask before proceeding to the next step. Always. No exceptions.
+## Rule 6 — Ask before starting the next PHASE only
 
-This is a **strict, non-negotiable policy**, not a suggestion:
+This is a **strict, non-negotiable policy**:
 
-- Antigravity must **stop and explicitly ask the user for confirmation** before
-  advancing to *any* next step — this includes, at minimum: moving from one feature to
-  the next within a phase, marking a phase `DONE`, moving from one phase to the next,
-  running the Docker rebuild/CI gate at the end of a phase, and starting Phase 16.
-- "Proceeding automatically because everything passed" is **not** permission to
-  continue. Passing tests, a green CI run, or a fully-checked Definition of Done make
-  a step *eligible* to move forward — they do not substitute for the user's go-ahead.
-- The ask must state plainly what was just completed/verified and what the next step
-  would be, e.g.: *"Phase 4 (RBAC + Permission System) is fully verified — all tests
-  pass, Docker is healthy, CI is green. Proceed to Phase 5 (Policy Engine / ABAC
-  Foundation)?"* — then **wait for an explicit reply** before doing anything else.
-- This applies even during otherwise-autonomous multi-session work (Section 2.4): the
-  Autonomous Resume Protocol may re-verify state and report on it automatically, but it
-  must still pause and ask before starting new implementation work or advancing past a
-  completed step — it does not grant permission to keep going unattended indefinitely.
-- If the user is unavailable to respond, Antigravity halts at the checkpoint and waits.
-  It does not guess, does not assume approval, and does not move on regardless of how
-  much idle time passes.
+- Antigravity may work autonomously through all features, fixes, tests, documentation,
+  Docker rebuilds, and CI repair cycles inside the currently approved phase.
+- Antigravity must **not ask for permission between features** in the same phase.
+- Antigravity must **stop only at the phase boundary** after the current phase is fully
+  verified and ask the user whether to start the next phase.
+- Marking the current phase `DONE` is an implementation task and does not require user
+  approval. Starting the next phase does require explicit approval.
+- Passing tests, green CI, or a complete Definition of Done make the phase eligible for
+  completion; they do not constitute permission to start the next phase.
+- The required checkpoint message is:
+  *"Phase N (<name>) is fully verified. Tests, regression, Docker, CI, documentation,
+  evidence, and Git push are green. Proceed to Phase N+1 (<name>)?"*
+- After asking, **wait**. Silence, elapsed time, a restart, or a prior generic "continue
+  building" instruction does not authorize the next phase.
+- The only other valid reason to stop and ask the user before reaching a phase boundary
+  is a genuine blocker that cannot be resolved from this specification, repository,
+  tests, logs, or available tooling.
 
----
+## Rule 6A — A generic continuation message is not phase approval
+
+Do not interpret messages such as:
+- "continue"
+- "keep going"
+- "resume"
+- "finish it"
+- "do the project"
+- "implement everything"
+
+as permission to cross a completed phase boundary once Rule 6 requires approval.
+
+The approval must clearly authorize the **next named phase**, for example:
+`Yes, proceed to Phase 5 — Policy Engine / ABAC Foundation.`
+
+## Rule 7 — Autonomous execution contract
+
+Within the approved current phase, Antigravity must behave like the primary implementer,
+not like an assistant waiting for micro-approvals.
+
+It must:
+
+1. Read the specification and repository state.
+2. Implement the current feature.
+3. Create/update tests.
+4. Run the tests.
+5. Diagnose failures from actual output.
+6. Fix the implementation.
+7. Re-run the tests.
+8. Repeat until the feature passes.
+9. Continue to the next feature in the same phase automatically.
+10. Complete the entire phase gate automatically.
+11. Stop only at the phase boundary and request permission for the next phase.
+
+Do not pause merely because:
+- a feature has become large,
+- a bug appeared,
+- a test failed,
+- Docker failed,
+- CI failed,
+- more debugging is needed,
+- documentation needs updating,
+- a previous assumption was wrong.
+
+Those are normal parts of the implementation loop.
+
+If a failure can be solved from the repository, logs, test output, official tool output,
+or this specification, solve it without asking the user.
+
+## Rule 8 — No silent deviations
+
+When the implementation discovers a necessary design choice that is not explicitly
+specified, choose the smallest implementation that is directly derived from the stated
+requirements and record it in `DECISIONS.md`.
+
+If the choice would change:
+- a required public API contract,
+- security semantics,
+- repository identity,
+- phase order,
+- data ownership,
+- acceptance criteria,
+- or the externally visible product scope,
+
+do not silently change it. Record the issue in `BLOCKERS.md` and stop for user input.
+
+## Rule 9 — No partial-phase handoff
+
+A session ending, crash, restart, or context loss is not permission to abandon the current
+phase.
+
+The next session must recover using `PROGRESS.md`, evidence, Git history, and the actual
+repository state. It must resume the first non-DONE phase and continue the autonomous loop.
 
 # 2. Phase Gate Protocol (read before starting any phase)
 
@@ -289,7 +417,15 @@ the single source of truth for where the project stands.
 | 16    | Final System Verification & Release       | NOT_STARTED | -           | -      |
 
 Status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED (<reason>)`, `DONE`.
-A phase may only be set to `DONE` once every item in Section 2.3 is checked.
+
+For every phase, `PROGRESS.md` should also record:
+- `Last Verified Commit`
+- `Evidence Directory`
+- `Verification Date`
+- `Blocker` when status is `BLOCKED`
+
+A phase may only be set to `DONE` once every item in Section 2.3 is checked **and the
+required evidence is present**. `PROGRESS.md` is a status record, not proof by itself.
 ```
 
 ## 2.2 Phase start protocol
@@ -304,9 +440,9 @@ Before writing a single line of code in a session, Antigravity must:
    you are allowed to work on right now.
 3. If that phase is `NOT_STARTED`, set it to `IN_PROGRESS` and commit that change
    alone (`chore: start phase N`) before writing feature code.
-4. If any prior row is not `DONE`, stop and fix/finish that earlier phase instead —
+6. If any prior row is not `DONE`, stop and fix/finish that earlier phase instead —
    do not jump ahead.
-5. Re-read the phase's section in this document in full before implementing anything.
+7. Re-read the phase's section in this document in full before implementing anything.
 
 ## 2.3 Definition of Done (applies to every phase, including Phase 16)
 
@@ -339,8 +475,9 @@ true:
 - [ ] `git remote -v` confirmed to be exactly `CANONICAL_REPO_URL`
       (`https://github.com/SibamDash/Enterprise_IAM.git`) **before** pushing
 - [ ] GitHub push to `SibamDash/Enterprise_IAM.git` successful and `git status` is clean
-- [ ] User explicitly asked "proceed to next phase?" and has explicitly replied yes
-      (Rule 6) — not yet asked / no reply yet = not done
+- [ ] Phase completion checkpoint is ready for user notification.
+- [ ] This phase may now be marked `DONE`; explicit user approval is required only
+      before starting the next phase (Rule 6).
 
 If **any** box is unchecked:
 
@@ -348,6 +485,25 @@ If **any** box is unchecked:
 DO NOT MOVE TO THE NEXT PHASE.
 Fix → Test → Fix → Test → Repeat, for as many iterations as it takes.
 ```
+
+## 2.3A Phase completion and approval protocol
+
+When all Definition-of-Done items pass:
+
+1. Save the objective evidence under `evidence/phase-N/`.
+2. Update `PROGRESS.md` to `DONE` with the verification date and evidence path.
+3. Create the final phase commit.
+4. Record that commit hash in `PROGRESS.md`, amend or create the required final state
+   commit as appropriate, and push to the canonical repository.
+5. Re-verify the pushed commit and inspect the GitHub Actions result for that exact commit.
+6. Only after CI is green, report the phase completion to the user.
+7. Ask exactly one question: whether to start the next phase.
+8. **Do not begin any work belonging to the next phase until the user explicitly says
+   yes.**
+
+The phase is allowed to remain `DONE` while waiting for approval. This is the intended
+stopping state.
+
 
 ## 2.4 Autonomous Resume Protocol (runs automatically — do not wait to be asked)
 
@@ -372,37 +528,37 @@ if [ "$ACTUAL" != "$EXPECTED" ]; then
   exit 1
 fi
 
-echo "==> Syncing with remote"
-git fetch origin
-git pull origin main
-
-echo "==> Checking for leftover local changes from an interrupted session"
+echo "==> Checking working tree before sync"
 if [[ -n "$(git status --porcelain)" ]]; then
-  echo "WARNING: uncommitted changes found. These are from an interrupted session."
-  echo "Do NOT discard them blindly — inspect, finish, or intentionally stash them"
-  echo "before proceeding. Treat any code they touch as UNVERIFIED until tested."
-  git status
+  echo "UNCOMMITTED WORK DETECTED."
+  echo "Inspect and verify the interrupted work before syncing."
+  git status --short
+else
+  echo "==> Working tree clean; syncing with remote using fast-forward only"
+  git fetch origin
+  git pull --ff-only origin main
 fi
 
 echo "==> Reading PROGRESS.md"
 if [[ ! -f PROGRESS.md ]]; then
-  echo "PROGRESS.md missing. This should only be possible before Phase 0 exists."
+  echo "FATAL: PROGRESS.md missing. Refusing to continue."
   exit 1
 fi
 cat PROGRESS.md
 
 echo "==> Running full regression suite to verify PROGRESS.md matches reality"
+set +e
 ./scripts/run-all-tests.sh
 REGRESSION_EXIT_CODE=$?
+set -e
 
 if [[ $REGRESSION_EXIT_CODE -ne 0 ]]; then
-  echo "STATE DRIFT DETECTED: PROGRESS.md claims phases are DONE, but the"
-  echo "regression suite failed. Do not trust the DONE labels. Stop and fix"
-  echo "before starting any new feature work (see Section 2.4.2)."
-  exit 1
+  echo "STATE DRIFT / REGRESSION DETECTED."
+  echo "Do not start new feature work. Fix the failure and rerun the suite."
+  exit "$REGRESSION_EXIT_CODE"
 fi
 
-echo "==> Bootstrap complete. PROGRESS.md is confirmed consistent with a passing build."
+echo "==> Bootstrap complete. Actual system state is verified."
 echo "==> Proceed to Section 2.2 (Phase Start Protocol)."
 ```
 
@@ -414,7 +570,7 @@ automatically, with no user prompt required.
 
 | Situation found | Required action |
 |---|---|
-| Bootstrap passes cleanly, no uncommitted changes | Proceed directly to Section 2.2 — resume the first non-`DONE` phase. |
+| Bootstrap passes cleanly, no uncommitted changes | Reconcile the first non-`DONE` phase. If it is the current approved/in-progress phase, resume it autonomously. If it is a new phase whose predecessor is DONE, require the explicit user approval for that phase before starting it. |
 | Uncommitted changes exist, belonging to the current `IN_PROGRESS` phase | Do not assume they are correct or finished. Re-run that phase's tests specifically, then the full regression suite, before continuing new work or marking anything `DONE`. |
 | Uncommitted changes exist but don't obviously match the `IN_PROGRESS` phase | Stop and inspect before writing any new code. Do not silently delete or silently keep — understand what they are first. If they're clearly abandoned scratch work, remove them only after confirming the tree returns to a passing state without them. |
 | A phase marked `DONE` now fails the regression suite (**state drift**) | Treat it as broken, not done. Immediately set its `PROGRESS.md` status to `BLOCKED (regression failure — see <date>)` and fix it before any further phase work, even if a "later" phase looks tempting to jump to. This is a Rule 5 violation if ignored. |
@@ -550,10 +706,9 @@ Section 2.3's checklist is fully checked.
 
 **Critical instruction:** Antigravity must not interpret a partially working feature,
 a red CI run, a failing Docker build, or a partially complete phase, as finished. Keep
-looping until everything above passes — then, and only then, advance. And even then,
-per Rule 6, "everything passed" is not the same as permission to advance: Antigravity
-must ask the user and wait for an explicit yes before starting the next phase (or the
-next feature within a phase).
+looping until everything above passes. Inside the current phase, continue automatically
+from feature to feature. Once the entire phase passes all gates, stop at the phase
+boundary and ask the user for explicit approval before starting the next phase.
 
 ---
 
@@ -979,9 +1134,29 @@ jobs:
       - name: Wait for backend health
         run: |
           for i in $(seq 1 30); do
-            curl -sf http://localhost:8080/api/v1/health && break
+            if curl -sf http://localhost:8080/api/v1/health; then
+              exit 0
+            fi
             sleep 2
           done
+          echo "Backend never became healthy"
+          docker compose -f docker-compose.yml -f docker-compose.test.yml ps
+          docker compose -f docker-compose.yml -f docker-compose.test.yml logs --no-color backend
+          exit 1
+
+      - name: Wait for frontend health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontend never became reachable"
+          docker compose -f docker-compose.yml -f docker-compose.test.yml ps
+          docker compose -f docker-compose.yml -f docker-compose.test.yml logs --no-color frontend
+          exit 1
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -1193,6 +1368,14 @@ AuditEvent
 
 ---
 
+## Dependency clarification — audit backbone
+
+A small audit-event abstraction must exist early enough for security-sensitive phases to
+emit events (for example token replay detection). Phase 12 is where the platform completes
+the durable audit repository, querying/filtering, administrator UX, retention decisions,
+and comprehensive coverage tests. Earlier phases must emit through the shared abstraction;
+Phase 12 must not create a second incompatible audit system.
+
 # 11. Phase 0 — Project Foundation
 
 ## Objective
@@ -1220,6 +1403,7 @@ testing harness that every later phase builds on.
 - `PROGRESS.md` (Section 2.1)
 - `.env.example`
 - `.gitignore`, `.dockerignore`
+- Minimal `AuditEvent` abstraction/sink used by later security-sensitive modules
 
 ## Required endpoints
 
@@ -1903,6 +2087,19 @@ git push origin main
 
 ---
 
+## Dependency clarification — OAuth clients and later application management
+
+Phase 7 requires a **minimal persisted OAuth client registration model** because an
+authorization server cannot be meaningfully tested without a client. This is not a
+placeholder: the model, validation, redirect URI checks, and security behavior are real.
+
+Phase 10 expands that capability into the full administrator-facing Application/Client
+Management experience, including CRUD, secret rotation/revocation, status, and scope
+management. Phase 10 must not reimplement the underlying OAuth security logic.
+
+SSO in Phase 9 uses the real client model created in Phase 7 and managed more completely
+in Phase 10.
+
 # 19. Phase 8 — OpenID Connect
 
 ## Objective
@@ -2160,6 +2357,10 @@ git push origin main
 ---
 
 # 24. Phase 13 — Security Controls
+
+Phase 13 is a **hardening/consolidation phase**, not permission to create duplicate
+authentication or lockout implementations. Reuse the security controls already built in
+earlier phases and strengthen, centralize, and test them.
 
 Implement:
 
@@ -2579,36 +2780,71 @@ Phase 16 is complete** — this is the target system, not merely a login service
 
 # Appendix — Quick Reference Card
 
-Keep this near you as a one-glance summary of Sections 1–7:
+Keep this near you as a one-glance operating contract:
 
 ```text
-0a. Before ANYTHING else, every session: `git remote -v` must equal
-    https://github.com/SibamDash/Enterprise_IAM.git exactly. Never push to, or
-    create, any other repository — no shortened name, no substitute. Mismatch = stop.
-0b. At the START of every session, automatically (never wait to be told): run
-   scripts/session-bootstrap.sh — pull latest, check for leftover uncommitted work,
-   and run the full regression suite to confirm PROGRESS.md matches reality. If it
-   doesn't (state drift), fix that before anything else.
-1. Read PROGRESS.md → find first non-DONE phase (0 through 16) → that is your ONLY
-   phase.
-2. Implement one feature at a time inside that phase.
-3. For each feature: implement → unit test → integration test → fix → re-test → loop
-   until it truly works. Before starting the NEXT feature in the same phase, ask the
-   user to confirm and wait for a reply (Rule 6) — even within a single phase.
-4. Never weaken security to pass a test or a CI run.
-5. When every feature in the phase passes, run the FULL regression suite (Section 5.6)
-   — every earlier phase's tests must still pass, not just this phase's.
-6. Rebuild and run the full Docker stack (Section 6) — it must come up healthy.
-7. Push and confirm the CI pipeline (Section 7) is green on that commit.
-8. Run the full Definition of Done checklist (Section 2.3). If anything is unchecked:
-   fix → test → repeat. Do not proceed.
-9. If everything is checked: update docs + PROGRESS.md → commit → push → verify
-   `git status` is clean and CI is green.
-10. Ask the user explicitly: "Phase N complete and verified — proceed to Phase N+1?"
-    and WAIT for an explicit reply. This is mandatory every single time (Rule 6) — a
-    clean DoD is never itself permission to continue.
-11. Only on an explicit "yes" may you move to the next phase. Repeat from step 1.
-12. After Phase 15, do NOT stop silently — but still ask before starting Phase 16
-    (Section 27), which re-verifies the entire system end to end. The project is only
-    complete once Phase 16 is DONE and the user has confirmed each step along the way.
+0. THIS FILE IS BINDING. Read it before coding.
+
+1. Every session:
+   - verify origin == https://github.com/SibamDash/Enterprise_IAM.git
+   - recover PROGRESS.md + evidence + Git state
+   - run the bootstrap/regression checks
+   - trust observed system state, not memory or claims
+
+2. Find the first non-DONE phase.
+   - That is the ONLY phase allowed.
+   - Never skip, reorder, or work ahead.
+
+3. Inside the current phase:
+   - work autonomously
+   - implement feature
+   - test
+   - diagnose actual failures
+   - fix
+   - retest
+   - continue to the next feature automatically
+   - DO NOT ask for permission between features
+
+4. No hallucinated completion:
+   - no test result without running the test
+   - no "Docker healthy" without checking it
+   - no "CI green" without checking the exact GitHub Actions run
+   - no invented API/UI/database result
+   - missing evidence = UNVERIFIED = not done
+
+5. Security:
+   - never weaken security
+   - never skip/delete failing tests
+   - never bypass tenant or authorization checks
+   - never expose secrets
+   - never accept arbitrary OAuth redirect URIs
+
+6. End of phase:
+   - all feature loops complete
+   - full regression passes
+   - Docker clean build/start/health passes
+   - CI green
+   - docs + PROGRESS.md updated
+   - evidence recorded
+   - final commit pushed to canonical repository
+   - working tree clean
+
+7. Then STOP.
+   - Tell the user exactly what passed.
+   - Ask:
+     "Phase N is fully verified. Proceed to Phase N+1?"
+   - WAIT.
+
+8. Only an explicit YES authorizes the next phase.
+   - A restart does not imply approval.
+   - "Continue", "keep going", or silence does not override this gate
+     unless the user explicitly confirms the next phase.
+
+9. If a genuine blocker cannot be solved from the repository/spec/tooling:
+   - record it in BLOCKERS.md
+   - show the exact evidence
+   - ask only for the missing decision/credential/input
+
+10. The project is complete only after Phase 16 passes every final gate.
 ```
+

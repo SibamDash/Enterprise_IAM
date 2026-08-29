@@ -4,7 +4,7 @@ test.describe('Phase 2: Authentication', () => {
   test('should allow user to navigate to login and see errors for invalid credentials', async ({ page }) => {
     // Navigate to Login directly
     await page.goto('http://localhost:3000/login');
-    await expect(page).toHaveTitle(/Vite \+ React/);
+    await expect(page).toHaveTitle(/Enterprise IAM/);
 
     await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
 

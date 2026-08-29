@@ -76,8 +76,7 @@ apiClient.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) {
         clearTokens();
-        // optionally trigger a custom event or store mutation here to logout the app visually
-        window.dispatchEvent(new Event('auth-logout'));
+        window.location.href = '/login';
         return Promise.reject(error);
       }
 
@@ -101,7 +100,7 @@ apiClient.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
         clearTokens();
-        window.dispatchEvent(new Event('auth-logout'));
+        window.location.href = '/login';
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

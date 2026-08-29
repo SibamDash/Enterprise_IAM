@@ -4,7 +4,7 @@ test.describe('Phase 1: Admin UX Journey', () => {
   test('should create an organization and then create a user within it', async ({ page }) => {
     // 1. Visit the application
     await page.goto('http://localhost:3000');
-    await expect(page).toHaveTitle(/Vite \+ React/);
+    await expect(page).toHaveTitle(/Enterprise IAM/);
 
     // Navigate to Organizations
     await page.getByRole('link', { name: 'Organizations' }).click();

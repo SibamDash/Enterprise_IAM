@@ -83,7 +83,10 @@ cleanly end to end, and CI green on the final commit.
 Section 2.4's Autonomous Resume Protocol is what makes unattended, multi-session work
 safe — it re-verifies real system state against `PROGRESS.md` at the start of every
 session, automatically, so a restart, crash, or new chat can never silently continue
-from an incorrect assumption about what's actually done.
+from an incorrect assumption about what's actually done. This automatic
+re-verification does **not** override Rule 6: Antigravity still must stop and get
+explicit user confirmation before advancing past any completed step, even one it just
+finished re-verifying on its own.
 
 ---
 
@@ -141,7 +144,6 @@ Do **not** stop after the first implementation attempt if:
 **Keep looping — implement, run, observe failure, fix, re-run — until the feature works
 end-to-end.** There is no maximum retry count. A feature is not "attempted," it is
 either working and verified, or it is not done.
-always stop and ask permission for proceeding to next phase only after the current phase is completed and verified
 
 ## Rule 2 — Test both success and failure paths
 
@@ -230,7 +232,29 @@ This governs every other section:
 6. Phase 15 finishing does **not** mean the project is done. The project is only done
    once Phase 16 (Section 27) — which re-verifies the entire system as a whole — is
    also `DONE`.
-7. Always stop and ask permission for proceeding to next phase only after the current phase is completed and verified.
+
+## Rule 6 — Ask before proceeding to the next step. Always. No exceptions.
+
+This is a **strict, non-negotiable policy**, not a suggestion:
+
+- Antigravity must **stop and explicitly ask the user for confirmation** before
+  advancing to *any* next step — this includes, at minimum: moving from one feature to
+  the next within a phase, marking a phase `DONE`, moving from one phase to the next,
+  running the Docker rebuild/CI gate at the end of a phase, and starting Phase 16.
+- "Proceeding automatically because everything passed" is **not** permission to
+  continue. Passing tests, a green CI run, or a fully-checked Definition of Done make
+  a step *eligible* to move forward — they do not substitute for the user's go-ahead.
+- The ask must state plainly what was just completed/verified and what the next step
+  would be, e.g.: *"Phase 4 (RBAC + Permission System) is fully verified — all tests
+  pass, Docker is healthy, CI is green. Proceed to Phase 5 (Policy Engine / ABAC
+  Foundation)?"* — then **wait for an explicit reply** before doing anything else.
+- This applies even during otherwise-autonomous multi-session work (Section 2.4): the
+  Autonomous Resume Protocol may re-verify state and report on it automatically, but it
+  must still pause and ask before starting new implementation work or advancing past a
+  completed step — it does not grant permission to keep going unattended indefinitely.
+- If the user is unavailable to respond, Antigravity halts at the checkpoint and waits.
+  It does not guess, does not assume approval, and does not move on regardless of how
+  much idle time passes.
 
 ---
 
@@ -315,6 +339,8 @@ true:
 - [ ] `git remote -v` confirmed to be exactly `CANONICAL_REPO_URL`
       (`https://github.com/SibamDash/Enterprise_IAM.git`) **before** pushing
 - [ ] GitHub push to `SibamDash/Enterprise_IAM.git` successful and `git status` is clean
+- [ ] User explicitly asked "proceed to next phase?" and has explicitly replied yes
+      (Rule 6) — not yet asked / no reply yet = not done
 
 If **any** box is unchecked:
 
@@ -509,13 +535,25 @@ Section 2.3's checklist is fully checked.
                                 ANY UNCHECKED? YES → FIX → LOOP
                                            │ NO
                                            ▼
-                              MARK PHASE DONE IN PROGRESS.md,
-                              ONLY THEN MOVE TO NEXT PHASE
+                              MARK PHASE DONE IN PROGRESS.md
+                                           │
+                                           ▼
+                              ┌─────────────────────────┐
+                              │ ASK USER: proceed to    │
+                              │ next phase? (Rule 6)    │
+                              └────────────┬────────────┘
+                                    WAIT FOR EXPLICIT REPLY
+                                           │
+                                           ▼
+                              ONLY ON "YES" → MOVE TO NEXT PHASE
 ```
 
 **Critical instruction:** Antigravity must not interpret a partially working feature,
 a red CI run, a failing Docker build, or a partially complete phase, as finished. Keep
-looping until everything above passes — then, and only then, advance.
+looping until everything above passes — then, and only then, advance. And even then,
+per Rule 6, "everything passed" is not the same as permission to advance: Antigravity
+must ask the user and wait for an explicit yes before starting the next phase (or the
+next feature within a phase).
 
 ---
 
@@ -2555,7 +2593,8 @@ Keep this near you as a one-glance summary of Sections 1–7:
    phase.
 2. Implement one feature at a time inside that phase.
 3. For each feature: implement → unit test → integration test → fix → re-test → loop
-   until it truly works.
+   until it truly works. Before starting the NEXT feature in the same phase, ask the
+   user to confirm and wait for a reply (Rule 6) — even within a single phase.
 4. Never weaken security to pass a test or a CI run.
 5. When every feature in the phase passes, run the FULL regression suite (Section 5.6)
    — every earlier phase's tests must still pass, not just this phase's.
@@ -2565,7 +2604,11 @@ Keep this near you as a one-glance summary of Sections 1–7:
    fix → test → repeat. Do not proceed.
 9. If everything is checked: update docs + PROGRESS.md → commit → push → verify
    `git status` is clean and CI is green.
-10. Only now may you move to the next phase. Repeat from step 1.
-11. After Phase 15, do NOT stop — Phase 16 (Section 27) re-verifies the entire system
-    end to end. The project is only complete once Phase 16 is DONE.
+10. Ask the user explicitly: "Phase N complete and verified — proceed to Phase N+1?"
+    and WAIT for an explicit reply. This is mandatory every single time (Rule 6) — a
+    clean DoD is never itself permission to continue.
+11. Only on an explicit "yes" may you move to the next phase. Repeat from step 1.
+12. After Phase 15, do NOT stop silently — but still ask before starting Phase 16
+    (Section 27), which re-verifies the entire system end to end. The project is only
+    complete once Phase 16 is DONE and the user has confirmed each step along the way.
 ```

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "==> Backend unit + integration tests"
-(cd backend && docker run --rm -v "/$(pwd)":/app -v m2_cache:/root/.m2 -w /app -v /var/run/docker.sock:/var/run/docker.sock eclipse-temurin:21-jdk-alpine ./mvnw -q test)
+(cd backend && docker run --rm -v "/$(pwd)":/app -v m2_cache:/root/.m2 -w /app -v /var/run/docker.sock:/var/run/docker.sock eclipse-temurin:21-jdk-jammy ./mvnw -q test)
 
 echo "==> Frontend unit tests"
 (cd frontend && npm run test -- --run)

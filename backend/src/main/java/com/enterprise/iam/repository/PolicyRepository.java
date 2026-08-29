@@ -1,0 +1,23 @@
+package com.enterprise.iam.repository;
+
+import com.enterprise.iam.domain.Policy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface PolicyRepository extends JpaRepository<Policy, UUID> {
+    
+    Optional<Policy> findByIdAndOrganizationId(UUID id, UUID organizationId);
+    
+    Page<Policy> findAllByOrganizationId(UUID organizationId, Pageable pageable);
+
+    List<Policy> findAllByOrganizationIdOrderByPriorityDesc(UUID organizationId);
+    
+    boolean existsByNameAndOrganizationId(String name, UUID organizationId);
+}

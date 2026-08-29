@@ -14,4 +14,6 @@ public class UserDto {
     private String status;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private java.util.Set<UUID> roleIds;
+    private java.util.Set<UUID> groupIds;
 }

@@ -57,6 +57,16 @@ public class RoleService {
         roleRepository.delete(role);
     }
 
+    @Transactional
+    public RoleDto assignPermissions(UUID id, java.util.Set<String> permissions) {
+        Role role = roleRepository.findByIdAndOrganizationId(id, getTenantId())
+                .orElseThrow(() -> new EntityNotFoundException("Role not found or access denied"));
+        role.getPermissions().clear();
+        role.getPermissions().addAll(permissions);
+        role = roleRepository.save(role);
+        return mapToDto(role);
+    }
+
     private UUID getTenantId() {
         UUID tenantId = TenantContextHolder.getTenantId();
         if (tenantId == null) {
@@ -73,6 +83,7 @@ public class RoleService {
         dto.setDescription(role.getDescription());
         dto.setCreatedAt(role.getCreatedAt());
         dto.setUpdatedAt(role.getUpdatedAt());
+        dto.setPermissions(role.getPermissions() != null ? new java.util.HashSet<>(role.getPermissions()) : new java.util.HashSet<>());
         return dto;
     }
 }

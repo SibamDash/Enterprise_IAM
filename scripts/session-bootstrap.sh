@@ -29,7 +29,7 @@ cat PROGRESS.md
 
 echo "==> Running full regression suite to verify PROGRESS.md matches reality"
 set +e
-./scripts/run-all-tests.sh
+bash ./scripts/run-all-tests.sh
 REGRESSION_EXIT_CODE=$?
 set -e
 

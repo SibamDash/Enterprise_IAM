@@ -12,4 +12,5 @@ public class RoleDto {
     private String description;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private java.util.Set<String> permissions;
 }

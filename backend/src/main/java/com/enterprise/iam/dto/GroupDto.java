@@ -12,4 +12,5 @@ public class GroupDto {
     private String description;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private java.util.Set<UUID> roleIds;
 }

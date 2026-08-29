@@ -1,5 +1,6 @@
 package com.enterprise.iam.security;
 
+import com.enterprise.iam.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,6 +16,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -40,12 +44,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     TenantContextHolder.setTenantId(UUID.fromString(tenantIdStr));
                 }
 
-                // Create authentication token. Roles will be added in Phase 4.
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userId, null, Collections.emptyList());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                // Fetch user from DB with roles and groups eagerly
+                userRepository.findById(UUID.fromString(userId)).ifPresent(user -> {
+                    Set<String> permissions = new HashSet<>();
+                    
+                    // Add permissions from direct roles
+                    if (user.getRoles() != null) {
+                        user.getRoles().forEach(role -> {
+                            if (role.getPermissions() != null) {
+                                permissions.addAll(role.getPermissions());
+                            }
+                        });
+                    }
+                    
+                    // Add permissions from group roles
+                    if (user.getGroups() != null) {
+                        user.getGroups().forEach(group -> {
+                            if (group.getRoles() != null) {
+                                group.getRoles().forEach(role -> {
+                                    if (role.getPermissions() != null) {
+                                        permissions.addAll(role.getPermissions());
+                                    }
+                                });
+                            }
+                        });
+                    }
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    var authorities = permissions.stream()
+                            .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
+                            .collect(java.util.stream.Collectors.toList());
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userId, null, authorities);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                });
             }
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);

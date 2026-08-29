@@ -6,7 +6,7 @@
 | 1     | Multi-Tenant Org + User Management        | DONE        | -                 | -                    | -                  | -       |
 | 2     | Password Authentication                   | DONE        | -                 | -                    | -                  | -       |
 | 3     | Token + Session Management                | DONE        | -                 | -                    | -                  | -       |
-| 4     | RBAC + Permission System                  | NOT_STARTED | -                 | -                    | -                  | -       |
+| 4     | RBAC + Permission System                  | DONE        | 2026-08-29        | -                    | -                  | -       |
 | 5     | Policy Engine / ABAC Foundation           | NOT_STARTED | -                 | -                    | -                  | -       |
 | 6     | MFA                                       | NOT_STARTED | -                 | -                    | -                  | -       |
 | 7     | OAuth 2.0 Authorization Server            | NOT_STARTED | -                 | -                    | -                  | -       |

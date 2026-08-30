@@ -1,6 +1,6 @@
 package com.enterprise.iam.security;
 
-import com.enterprise.iam.repository.UserRepository;
+
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -25,7 +25,7 @@ import java.util.UUID;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
-    private final UserRepository userRepository;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -52,42 +52,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     TenantContextHolder.setTenantId(UUID.fromString(tenantIdStr));
                 }
 
-                // Fetch user from DB with roles and groups eagerly
-                userRepository.findById(UUID.fromString(userId)).ifPresent(user -> {
-                    Set<String> permissions = new HashSet<>();
-                    
-                    // Add permissions from direct roles
-                    if (user.getRoles() != null) {
-                        user.getRoles().forEach(role -> {
-                            if (role.getPermissions() != null) {
-                                permissions.addAll(role.getPermissions());
-                            }
-                        });
-                    }
-                    
-                    // Add permissions from group roles
-                    if (user.getGroups() != null) {
-                        user.getGroups().forEach(group -> {
-                            if (group.getRoles() != null) {
-                                group.getRoles().forEach(role -> {
-                                    if (role.getPermissions() != null) {
-                                        permissions.addAll(role.getPermissions());
-                                    }
-                                });
-                            }
-                        });
-                    }
-
-                    var authorities = permissions.stream()
+                // Extract permissions from JWT claims
+                @SuppressWarnings("unchecked")
+                java.util.List<String> permissions = claims.get("permissions", java.util.List.class);
+                
+                java.util.List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = java.util.Collections.emptyList();
+                if (permissions != null) {
+                    authorities = permissions.stream()
                             .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
                             .collect(java.util.stream.Collectors.toList());
+                }
 
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userId, null, authorities);
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userId, null, authorities);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                });
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);

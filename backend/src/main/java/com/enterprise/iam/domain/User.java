@@ -62,4 +62,27 @@ public class User extends BaseEntity {
     @org.hibernate.annotations.Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
     @Column(columnDefinition = "jsonb")
     private java.util.Map<String, String> attributes = new java.util.HashMap<>();
+
+    public Set<String> getEffectivePermissions() {
+        Set<String> permissions = new HashSet<>();
+        if (roles != null) {
+            roles.forEach(role -> {
+                if (role.getPermissions() != null) {
+                    permissions.addAll(role.getPermissions());
+                }
+            });
+        }
+        if (groups != null) {
+            groups.forEach(group -> {
+                if (group.getRoles() != null) {
+                    group.getRoles().forEach(role -> {
+                        if (role.getPermissions() != null) {
+                            permissions.addAll(role.getPermissions());
+                        }
+                    });
+                }
+            });
+        }
+        return permissions;
+    }
 }

@@ -54,7 +54,7 @@ public class AuthService {
             throw new SecurityException("Account is locked due to too many failed attempts");
         }
 
-        Optional<User> userOpt = userRepository.findByEmailAndOrganizationId(request.getEmail(), tenantId);
+        Optional<User> userOpt = userRepository.findWithRolesByEmailAndOrganizationId(request.getEmail(), tenantId);
         
         if (userOpt.isEmpty()) {
             loginAttemptService.loginFailed(attemptKey);
@@ -99,7 +99,7 @@ public class AuthService {
         }
 
         UUID userId = UUID.fromString(claims.getSubject());
-        User user = userRepository.findById(userId)
+        User user = userRepository.findWithRolesById(userId)
                 .orElseThrow(() -> new SecurityException("User not found"));
 
         if (!mfaService.verifyCode(user.getMfaSecret(), code)) {
@@ -118,7 +118,7 @@ public class AuthService {
         }
 
         UUID userId = UUID.fromString(claims.getSubject());
-        User user = userRepository.findById(userId)
+        User user = userRepository.findWithRolesById(userId)
                 .orElseThrow(() -> new SecurityException("User not found"));
 
         if (!mfaService.verifyAndConsumeRecoveryCode(userId, recoveryCode)) {
@@ -130,7 +130,7 @@ public class AuthService {
 
     private LoginResponse issueTokensForUser(User user, String userAgent, String ipAddress) {
         // Issue tokens
-        String accessToken = jwtTokenProvider.generateToken(user.getId(), user.getOrganizationId(), user.getEmail());
+        String accessToken = jwtTokenProvider.generateToken(user.getId(), user.getOrganizationId(), user.getEmail(), user.getEffectivePermissions());
         String refreshToken = UUID.randomUUID().toString();
         String refreshTokenHash = hashToken(refreshToken);
         
@@ -186,7 +186,7 @@ public class AuthService {
         session.setRevoked(true);
         sessionRepository.save(session);
 
-        User user = userRepository.findById(session.getUserId())
+        User user = userRepository.findWithRolesById(session.getUserId())
                 .orElseThrow(() -> new SecurityException("User not found"));
 
         if (!"ACTIVE".equals(user.getStatus())) {
@@ -194,7 +194,7 @@ public class AuthService {
         }
 
         // Issue new tokens
-        String newAccessToken = jwtTokenProvider.generateToken(user.getId(), user.getOrganizationId(), user.getEmail());
+        String newAccessToken = jwtTokenProvider.generateToken(user.getId(), user.getOrganizationId(), user.getEmail(), user.getEffectivePermissions());
         String newRefreshToken = UUID.randomUUID().toString();
         
         Session newSession = new Session();

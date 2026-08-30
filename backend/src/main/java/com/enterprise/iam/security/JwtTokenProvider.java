@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -20,7 +21,7 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration.ms:900000}") // Default 15 minutes
     private long jwtExpirationMs;
 
-    public String generateToken(UUID userId, UUID tenantId, String email) {
+    public String generateToken(UUID userId, UUID tenantId, String email, Set<String> permissions) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
@@ -28,6 +29,7 @@ public class JwtTokenProvider {
                 .subject(userId.toString())
                 .claim("tenantId", tenantId.toString())
                 .claim("email", email)
+                .claim("permissions", permissions)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())

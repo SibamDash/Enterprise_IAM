@@ -78,9 +78,9 @@ public class AuthServiceTest {
         user.setOrganizationId(tenantId);
 
         when(loginAttemptService.isBlocked(anyString())).thenReturn(false);
-        when(userRepository.findByEmailAndOrganizationId(request.getEmail(), tenantId)).thenReturn(Optional.of(user));
+        when(userRepository.findWithRolesByEmailAndOrganizationId(request.getEmail(), tenantId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password", "hashed_password")).thenReturn(true);
-        when(jwtTokenProvider.generateToken(any(), any(), anyString())).thenReturn("mock_token");
+        when(jwtTokenProvider.generateToken(any(), any(), anyString(), any())).thenReturn("mock_token");
 
         authService.authenticate(request, "UserAgent", "127.0.0.1");
 
@@ -96,7 +96,7 @@ public class AuthServiceTest {
         request.setPassword("password");
 
         when(loginAttemptService.isBlocked(anyString())).thenReturn(false);
-        when(userRepository.findByEmailAndOrganizationId(request.getEmail(), tenantId)).thenReturn(Optional.empty());
+        when(userRepository.findWithRolesByEmailAndOrganizationId(request.getEmail(), tenantId)).thenReturn(Optional.empty());
 
         assertThrows(SecurityException.class, () -> authService.authenticate(request, "UserAgent", "127.0.0.1"));
 

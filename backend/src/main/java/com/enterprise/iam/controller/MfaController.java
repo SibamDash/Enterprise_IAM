@@ -94,7 +94,14 @@ public class MfaController {
         if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null) {
             throw new SecurityException("Not authenticated");
         }
-        UUID userId = UUID.fromString(auth.getPrincipal().toString());
+        Object principal = auth.getPrincipal();
+        String userIdStr;
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            userIdStr = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+        } else {
+            userIdStr = principal.toString();
+        }
+        UUID userId = UUID.fromString(userIdStr);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new SecurityException("User not found"));
     }

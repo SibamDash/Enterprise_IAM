@@ -3,6 +3,7 @@ package com.enterprise.iam.controller;
 import com.enterprise.iam.dto.LoginResponse;
 import com.enterprise.iam.dto.ForgotPasswordRequest;
 import com.enterprise.iam.dto.LoginRequest;
+import com.enterprise.iam.dto.MfaVerifyRequest;
 import com.enterprise.iam.dto.ResetPasswordRequest;
 import com.enterprise.iam.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +26,30 @@ public class AuthController {
             String userAgent = httpRequest.getHeader("User-Agent");
             String ipAddress = httpRequest.getRemoteAddr();
             LoginResponse response = authService.authenticate(request, userAgent, ipAddress);
+            return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @PostMapping("/login/mfa")
+    public ResponseEntity<LoginResponse> loginMfa(@Valid @RequestBody MfaVerifyRequest request, HttpServletRequest httpRequest) {
+        try {
+            String userAgent = httpRequest.getHeader("User-Agent");
+            String ipAddress = httpRequest.getRemoteAddr();
+            LoginResponse response = authService.verifyMfa(request.getMfaToken(), request.getCode(), userAgent, ipAddress);
+            return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @PostMapping("/login/recovery")
+    public ResponseEntity<LoginResponse> loginRecovery(@Valid @RequestBody MfaVerifyRequest request, HttpServletRequest httpRequest) {
+        try {
+            String userAgent = httpRequest.getHeader("User-Agent");
+            String ipAddress = httpRequest.getRemoteAddr();
+            LoginResponse response = authService.recoverMfa(request.getMfaToken(), request.getCode(), userAgent, ipAddress);
             return ResponseEntity.ok(response);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

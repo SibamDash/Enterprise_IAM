@@ -38,6 +38,10 @@ export default function DashboardLayout() {
             <Shield size={20} />
             Sessions
           </NavLink>
+          <NavLink to="/security" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Shield size={20} />
+            Security
+          </NavLink>
           <button 
             className="nav-link" 
             style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', marginTop: 'auto' }}

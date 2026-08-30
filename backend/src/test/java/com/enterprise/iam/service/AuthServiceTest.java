@@ -45,6 +45,9 @@ public class AuthServiceTest {
     @Mock
     private JwtTokenProvider jwtTokenProvider;
 
+    @Mock
+    private MfaService mfaService;
+
     @InjectMocks
     private AuthService authService;
 

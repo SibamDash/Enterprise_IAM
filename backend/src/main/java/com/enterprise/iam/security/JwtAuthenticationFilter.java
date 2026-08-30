@@ -35,6 +35,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 Claims claims = tokenProvider.getClaimsFromToken(jwt);
                 
+                Boolean isMfa = claims.get("mfa", Boolean.class);
+                if (isMfa != null && isMfa) {
+                    // This is an intermediate MFA token, not a full access token.
+                    // It cannot be used for regular API access.
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
                 String userId = claims.getSubject();
                 String tenantIdStr = claims.get("tenantId", String.class);
                 String email = claims.get("email", String.class);
@@ -92,6 +100,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
+        }
+        String accessTokenParam = request.getParameter("access_token");
+        if (StringUtils.hasText(accessTokenParam) && request.getRequestURI().startsWith("/oauth2/")) {
+            return accessTokenParam;
         }
         return null;
     }

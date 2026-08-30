@@ -10,6 +10,7 @@ import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import Sessions from './pages/settings/Sessions';
+import SecuritySettings from './pages/settings/SecuritySettings';
 import './App.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
         <Route path="users" element={<UserList />} />
         <Route path="users/new" element={<CreateUser />} />
         <Route path="sessions" element={<Sessions />} />
+        <Route path="security" element={<SecuritySettings />} />
       </Route>
     </Routes>
   );

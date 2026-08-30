@@ -34,6 +34,21 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateMfaToken(UUID userId, UUID tenantId, String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes validity
+
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("tenantId", tenantId.toString())
+                .claim("email", email)
+                .claim("mfa", true) // Indicates this is an intermediate MFA token
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())

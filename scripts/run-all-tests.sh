@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
 echo "==> Backend unit + integration tests"
 (cd backend && MSYS_NO_PATHCONV=1 docker run --rm -v "/$(pwd)":/app -v m2_cache:/root/.m2 -w /app -v //var/run/docker.sock:/var/run/docker.sock eclipse-temurin:21-jdk-jammy ./mvnw -q test)

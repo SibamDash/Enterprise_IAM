@@ -13,6 +13,7 @@ import com.enterprise.iam.repository.UserRepository;
 import com.enterprise.iam.security.JwtTokenProvider;
 import com.enterprise.iam.security.LoginAttemptService;
 import com.enterprise.iam.security.TenantContextHolder;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +36,7 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
     private final StringRedisTemplate redisTemplate;
     private final JwtTokenProvider jwtTokenProvider;
+    private final MfaService mfaService;
 
     private static final String RESET_TOKEN_PREFIX = "reset_token:";
     private static final Duration RESET_TOKEN_DURATION = Duration.ofMinutes(30);
@@ -77,6 +79,56 @@ public class AuthService {
 
         loginAttemptService.loginSucceeded(attemptKey);
         
+        if (user.isMfaEnabled()) {
+            String mfaToken = jwtTokenProvider.generateMfaToken(user.getId(), user.getOrganizationId(), user.getEmail());
+            return LoginResponse.builder()
+                    .mfaRequired(true)
+                    .mfaToken(mfaToken)
+                    .build();
+        }
+        
+        return issueTokensForUser(user, userAgent, ipAddress);
+    }
+
+    @Transactional
+    public LoginResponse verifyMfa(String mfaToken, String code, String userAgent, String ipAddress) {
+        Claims claims = jwtTokenProvider.getClaimsFromToken(mfaToken);
+        Boolean isMfa = claims.get("mfa", Boolean.class);
+        if (isMfa == null || !isMfa) {
+            throw new SecurityException("Invalid MFA token");
+        }
+
+        UUID userId = UUID.fromString(claims.getSubject());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new SecurityException("User not found"));
+
+        if (!mfaService.verifyCode(user.getMfaSecret(), code)) {
+            throw new SecurityException("Invalid MFA code");
+        }
+
+        return issueTokensForUser(user, userAgent, ipAddress);
+    }
+
+    @Transactional
+    public LoginResponse recoverMfa(String mfaToken, String recoveryCode, String userAgent, String ipAddress) {
+        Claims claims = jwtTokenProvider.getClaimsFromToken(mfaToken);
+        Boolean isMfa = claims.get("mfa", Boolean.class);
+        if (isMfa == null || !isMfa) {
+            throw new SecurityException("Invalid MFA token");
+        }
+
+        UUID userId = UUID.fromString(claims.getSubject());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new SecurityException("User not found"));
+
+        if (!mfaService.verifyAndConsumeRecoveryCode(userId, recoveryCode)) {
+            throw new SecurityException("Invalid recovery code");
+        }
+
+        return issueTokensForUser(user, userAgent, ipAddress);
+    }
+
+    private LoginResponse issueTokensForUser(User user, String userAgent, String ipAddress) {
         // Issue tokens
         String accessToken = jwtTokenProvider.generateToken(user.getId(), user.getOrganizationId(), user.getEmail());
         String refreshToken = UUID.randomUUID().toString();

@@ -37,6 +37,12 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private String status = "ACTIVE";
 
+    @Column(name = "mfa_enabled", nullable = false)
+    private boolean mfaEnabled = false;
+
+    @Column(name = "mfa_secret")
+    private String mfaSecret;
+
     @ManyToMany
     @JoinTable(
         name = "user_roles",

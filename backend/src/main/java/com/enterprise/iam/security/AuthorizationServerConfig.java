@@ -21,6 +21,12 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import com.enterprise.iam.repository.UserRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
@@ -38,9 +44,11 @@ import java.util.List;
 public class AuthorizationServerConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final UserRepository userRepository;
 
-    public AuthorizationServerConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public AuthorizationServerConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserRepository userRepository) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -118,5 +126,32 @@ public class AuthorizationServerConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder().build();
+    }
+
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
+        return (context) -> {
+            if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue()) || 
+                OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+                
+                String principalName = context.getPrincipal().getName();
+                
+                try {
+                    UUID userId = UUID.fromString(principalName);
+                    userRepository.findById(userId).ifPresent(user -> {
+                        if (context.getAuthorizedScopes().contains(OidcScopes.OPENID)) {
+                            context.getClaims().claim("email", user.getEmail());
+                            context.getClaims().claim("name", ((user.getFirstName() != null ? user.getFirstName() : "") + 
+                                (user.getLastName() != null ? " " + user.getLastName() : "")).trim());
+                            context.getClaims().claim("preferred_username", user.getEmail());
+                        }
+                        
+                        context.getClaims().claim("tenantId", user.getOrganizationId().toString());
+                    });
+                } catch (IllegalArgumentException e) {
+                    // Ignore if principal name is not a UUID (e.g. client credentials grant)
+                }
+            }
+        };
     }
 }

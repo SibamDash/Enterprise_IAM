@@ -17,22 +17,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+
+
+
+
+
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.springframework.context.annotation.Import;
-import com.enterprise.iam.TestcontainersConfiguration;
+
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+
 public class AuthIntegrationTest {
 
     @Autowired

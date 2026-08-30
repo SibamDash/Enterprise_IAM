@@ -1,6 +1,6 @@
 package com.enterprise.iam.integration;
 
-import com.enterprise.iam.TestcontainersConfiguration;
+
 import com.enterprise.iam.domain.Group;
 import com.enterprise.iam.domain.Organization;
 import com.enterprise.iam.domain.Role;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+
 public class PermissionMatrixIntegrationTest {
 
     @Autowired

@@ -13,12 +13,20 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: iam_test
+          POSTGRES_DB: iam
           POSTGRES_USER: iam_user
           POSTGRES_PASSWORD: iam_password
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U iam_user"
+          --health-cmd "pg_isready -U iam_user -d iam"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10

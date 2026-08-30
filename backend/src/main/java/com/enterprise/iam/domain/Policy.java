@@ -5,8 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +26,11 @@ public class Policy extends BaseEntity {
     @Column(nullable = false)
     private String effect; // ALLOW or DENY
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    @org.hibernate.annotations.Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
     @Column(columnDefinition = "jsonb", nullable = false)
     private List<String> actions = new ArrayList<>();
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    @org.hibernate.annotations.Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
     @Column(columnDefinition = "jsonb", nullable = false)
     private List<String> resources = new ArrayList<>();
 

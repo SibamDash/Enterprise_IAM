@@ -59,7 +59,7 @@ public class User extends BaseEntity {
     )
     private Set<Group> groups = new HashSet<>();
 
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @org.hibernate.annotations.Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
     @Column(columnDefinition = "jsonb")
     private java.util.Map<String, String> attributes = new java.util.HashMap<>();
 }

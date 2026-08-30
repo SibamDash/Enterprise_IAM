@@ -96,7 +96,7 @@ export default function SecuritySettings() {
             <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
               Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', backgroundColor: 'white', padding: '16px', borderRadius: '8px', display: 'inline-block' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', backgroundColor: 'white', padding: '16px', borderRadius: '8px' }}>
               <QRCodeSVG value={setupData.qrCodeUri} size={200} />
             </div>
             <div className="form-group" style={{ maxWidth: '300px' }}>

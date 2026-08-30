@@ -17,6 +17,13 @@ export default function Sessions() {
     try {
       const res = await apiClient.get('/api/v1/sessions');
       setSessions(res.data);
+      
+      // If we have no active sessions, our current session must have been revoked
+      if (res.data.length === 0) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+      }
     } catch (err) {
       setError('Failed to load active sessions');
     } finally {

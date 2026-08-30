@@ -3,29 +3,16 @@ import { test, expect } from '@playwright/test';
 test.describe('Phase 3: Sessions & Token Management', () => {
 
   test('User can view and manage their sessions', async ({ page, request }) => {
-    // 1. Setup Tenant and User via API (from Phase 1 & 2 tests)
-    const orgRes = await request.post('http://localhost:8080/api/v1/organizations', {
-      data: { name: 'Session Test Org', domain: 'sessiontest.com' }
-    });
-    const org = await orgRes.json();
-    const tenantId = org.id;
+    // 1. Get the seeded organization ID
+    const orgsRes = await request.get('http://localhost:8080/api/v1/organizations');
+    const orgs = await orgsRes.json();
+    const tenantId = orgs.content[0].id;
 
-    await request.post('http://localhost:8080/api/v1/users', {
-      headers: { 'X-Tenant-ID': tenantId },
-      data: {
-        email: 'sessionuser@sessiontest.com',
-        firstName: 'Session',
-        lastName: 'User',
-        role: 'USER',
-        password: 'Password123!'
-      }
-    });
-
-    // 2. Login via UI
+    // 2. Login via UI with seeded admin
     await page.goto('/login');
     await page.fill('#tenantId', tenantId);
-    await page.fill('#email', 'sessionuser@sessiontest.com');
-    await page.fill('#password', 'Password123!');
+    await page.fill('#email', 'admin@acme.com');
+    await page.fill('#password', 'SecurePassword123!');
     await page.click('button[type="submit"]');
 
     // Wait for navigation to dashboard
@@ -40,16 +27,20 @@ test.describe('Phase 3: Sessions & Token Management', () => {
     
     // We should see at least one active session row (with Revoke button)
     const sessionRows = page.locator('.btn-danger');
-    await expect(sessionRows).toHaveCount(1);
+    await expect(sessionRows.first()).toBeVisible();
 
-    // 5. Revoke session
-    await sessionRows.first().click();
-    
-    // After revoking, the list should be empty (since we revoked our own session)
-    // Actually, if we revoke our only session, the next API call (or the refresh of the session list) 
-    // will fail with 401, which the interceptor will try to refresh.
-    // The refresh will fail because the token is revoked, causing a redirect to /login.
-    // Let's assert we get redirected to login eventually!
+    // 5. Revoke sessions until we are redirected to login
+    // Since parallel tests use the same admin account, there might be multiple active sessions.
+    // We click Revoke on the first session until the app detects we revoked our own session and kicks us out.
+    while (page.url().includes('/sessions')) {
+      const revokeBtn = page.locator('.btn-danger').first();
+      if (await revokeBtn.isVisible()) {
+        await revokeBtn.click();
+        await page.waitForTimeout(500); // Wait for the state update or redirect
+      } else {
+        break;
+      }
+    }
     
     // Wait for the app to redirect us back to login due to unauthorized
     await expect(page).toHaveURL(/\/login/, { timeout: 10000 });

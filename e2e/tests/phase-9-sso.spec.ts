@@ -26,8 +26,8 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
 
     // 2. Simulate User opening App A (CRM)
     // The CRM app directs the user to the IAM authorize endpoint.
-    // The frontend intercepts the redirect and appends the access_token.
-    const crmAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=crm-client&scope=openid profile&redirect_uri=http://127.0.0.1:3000/crm/callback&access_token=${accessToken}`;
+    // The browser will automatically attach the IAM_SESSION HttpOnly cookie.
+    const crmAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=crm-client&scope=openid profile&redirect_uri=http://127.0.0.1:3000/crm/callback`;
     
     await page.goto(crmAuthUrl);
 
@@ -37,7 +37,7 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
 
     // 3. Simulate User opening App B (HR)
     // The HR app directs the user to the IAM authorize endpoint.
-    const hrAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=hr-client&scope=openid profile&redirect_uri=http://127.0.0.1:3000/hr/callback&access_token=${accessToken}`;
+    const hrAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=hr-client&scope=openid profile&redirect_uri=http://127.0.0.1:3000/hr/callback`;
     
     await page.goto(hrAuthUrl);
 

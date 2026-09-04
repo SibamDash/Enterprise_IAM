@@ -10,7 +10,7 @@
 | 5     | Policy Engine / ABAC Foundation           | DONE        | 2026-08-29        | -                    | -                  | -       |
 | 6     | MFA                                       | DONE        | -                 | -                    | -                  | -       |
 | 7     | OAuth 2.0 Authorization Server            | DONE        | -                 | -                    | -                  | -       |
-| 8     | OpenID Connect                            | DONE        | 2026-08-30        | -                    | -                  | -       |
+| 8     | OpenID Connect                            | DONE        | 2026-09-04        | ed572a7              | -                  | -       |
 | 9     | SSO                                       | NOT_STARTED | -                 | -                    | -                  | -       |
 | 10    | Client/Application Management             | NOT_STARTED | -                 | -                    | -                  | -       |
 | 11    | Client Credentials + Service Accounts     | NOT_STARTED | -                 | -                    | -                  | -       |

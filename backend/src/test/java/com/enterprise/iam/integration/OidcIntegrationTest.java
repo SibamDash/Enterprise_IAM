@@ -17,6 +17,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -81,13 +86,13 @@ public class OidcIntegrationTest {
 
     @Test
     void customizerAddsClaimsToIdToken() {
-        JwtEncodingContext context = mock(JwtEncodingContext.class);
-        when(context.getTokenType()).thenReturn(new OAuth2TokenType(OidcParameterNames.ID_TOKEN));
-        when(context.getPrincipal()).thenReturn(new UsernamePasswordAuthenticationToken(testUser.getId().toString(), null));
-        when(context.getAuthorizedScopes()).thenReturn(Set.of(OidcScopes.OPENID));
-        
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder();
-        when(context.getClaims()).thenReturn(claimsBuilder);
+        
+        JwtEncodingContext context = JwtEncodingContext.with(JwsHeader.with(SignatureAlgorithm.RS256), claimsBuilder)
+                .tokenType(new OAuth2TokenType(OidcParameterNames.ID_TOKEN))
+                .principal(new UsernamePasswordAuthenticationToken(testUser.getId().toString(), null))
+                .authorizedScopes(Set.of(OidcScopes.OPENID))
+                .build();
 
         jwtTokenCustomizer.customize(context);
 

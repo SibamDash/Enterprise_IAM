@@ -1,3 +1,14 @@
+server:
+  servlet:
+    session:
+      cookie:
+        name: IAM_SESSION
+        http-only: true
+        secure: false # set to true in production HTTPS
+        same-site: lax
+        path: /
+      timeout: 15m
+
 spring:
   application:
     name: iam

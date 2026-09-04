@@ -44,5 +44,34 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
     // Assert that the IAM auto-approves the login and seamlessly redirects back to HR
     // with an authorization code, proving the SSO cross-application experience.
     await expect(page).toHaveURL(/http:\/\/127\.0\.0\.1:3000\/hr\/callback\?code=.+/);
+    
+    // Explicitly verify no JWT is in the URL (it should only be the code)
+    const finalUrl = page.url();
+    expect(finalUrl).not.toContain('access_token');
+    expect(finalUrl).not.toContain(accessToken!);
+
+    // 4. Verify API requests continue to work with Authorization: Bearer <JWT>
+    // This proves the stateless JWT mechanism is preserved for APIs.
+    const apiResponse = await request.get('http://localhost:8080/api/v1/users', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    expect(apiResponse.ok()).toBeTruthy();
+
+    // 5. Verify Logout invalidates the server-side session
+    // Navigate back to the IAM Dashboard and log out
+    await page.goto('http://localhost:3000/');
+    await page.getByRole('button', { name: 'Sign out' }).click();
+    
+    // Wait for redirect to login page
+    await expect(page).toHaveURL(/.*\/login/);
+
+    // 6. Verify subsequent access to /oauth2/authorize requires authentication again
+    // Now that the session is invalidated, attempting SSO should block and ask for login
+    await page.goto(crmAuthUrl);
+    
+    // Should be redirected to the IAM login page instead of auto-approving
+    await expect(page).toHaveURL(/.*\/login/);
   });
 });

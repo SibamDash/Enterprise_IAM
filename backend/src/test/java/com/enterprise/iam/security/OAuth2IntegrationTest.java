@@ -32,10 +32,10 @@ public class OAuth2IntegrationTest {
 
     @BeforeEach
     void setUp() {
-        if (registeredClientRepository.findByClientId("test-client") == null) {
+        if (registeredClientRepository.findByClientId("oauth2-test-client") == null) {
             RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                    .clientId("test-client")
-                    .clientSecret("{noop}secret")
+                    .clientId("oauth2-test-client")
+                    .clientSecret("{noop}oauth2-secret")
                     .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                     .redirectUri("http://localhost:8080/authorized")
@@ -66,7 +66,7 @@ public class OAuth2IntegrationTest {
     @Test
     void testAuthorizeEndpointRequiresAuthentication() throws Exception {
         // Without authentication (no access_token param or Authorization header), it should redirect to login (302)
-        mockMvc.perform(get("/oauth2/authorize?response_type=code&client_id=test-client&scope=openid%20profile&redirect_uri=http://localhost:8080/authorized"))
+        mockMvc.perform(get("/oauth2/authorize?response_type=code&client_id=oauth2-test-client&scope=openid%20profile&redirect_uri=http://localhost:8080/authorized"))
                 .andExpect(status().is3xxRedirection());
     }
 }

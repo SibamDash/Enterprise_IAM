@@ -64,8 +64,6 @@ public class AuthorizationServerConfig {
             .exceptionHandling((exceptions) -> exceptions
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("http://localhost:3000/login"))
             )
-            // Add our Jwt filter so we can authenticate via the access_token query parameter when redirecting back
-            .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             // Accept access tokens for User Info and/or Client Registration
             .oauth2ResourceServer((resourceServer) -> resourceServer
                 .jwt(Customizer.withDefaults())

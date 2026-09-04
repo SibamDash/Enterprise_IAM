@@ -14,6 +14,17 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import java.util.Set;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,6 +33,9 @@ public class OidcIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer;
 
     @Autowired
     private UserRepository userRepository;
@@ -63,5 +77,24 @@ public class OidcIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.keys").isArray())
                 .andExpect(jsonPath("$.keys[0].kty").value("RSA"));
+    }
+
+    @Test
+    void customizerAddsClaimsToIdToken() {
+        JwtEncodingContext context = mock(JwtEncodingContext.class);
+        when(context.getTokenType()).thenReturn(new OAuth2TokenType(OidcParameterNames.ID_TOKEN));
+        when(context.getPrincipal()).thenReturn(new UsernamePasswordAuthenticationToken(testUser.getId().toString(), null));
+        when(context.getAuthorizedScopes()).thenReturn(Set.of(OidcScopes.OPENID));
+        
+        JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder();
+        when(context.getClaims()).thenReturn(claimsBuilder);
+
+        jwtTokenCustomizer.customize(context);
+
+        JwtClaimsSet claims = claimsBuilder.build();
+        assertEquals("oidcuser@example.com", claims.getClaim("email"));
+        assertEquals("Oidc User", claims.getClaim("name"));
+        assertEquals("oidcuser@example.com", claims.getClaim("preferred_username"));
+        assertEquals(tenantId.toString(), claims.getClaim("tenantId"));
     }
 }

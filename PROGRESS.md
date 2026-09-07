@@ -12,7 +12,7 @@
 | 7     | OAuth 2.0 Authorization Server            | DONE        | -                 | -                    | -                  | -       |
 | 8     | OpenID Connect                            | DONE        | 2026-09-04        | ed572a7              | -                  | -       |
 | 9     | SSO                                       | DONE        | 2026-09-07        | efe190b              | -                  | -       |
-| 10    | Client/Application Management             | NOT_STARTED | -                 | -                    | -                  | -       |
+| 10    | Client/Application Management             | DONE        | 2026-09-07        | f1200b8              | -                  | -       |
 | 11    | Client Credentials + Service Accounts     | NOT_STARTED | -                 | -                    | -                  | -       |
 | 12    | Audit Logging + Security Events           | NOT_STARTED | -                 | -                    | -                  | -       |
 | 13    | Security Controls                         | NOT_STARTED | -                 | -                    | -                  | -       |

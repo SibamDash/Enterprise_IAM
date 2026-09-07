@@ -5,6 +5,8 @@ import OrganizationList from './pages/organizations/OrganizationList';
 import CreateOrganization from './pages/organizations/CreateOrganization';
 import UserList from './pages/users/UserList';
 import CreateUser from './pages/users/CreateUser';
+import ApplicationList from './pages/applications/ApplicationList';
+import ApplicationForm from './pages/applications/ApplicationForm';
 import AuthLayout from './layouts/AuthLayout';
 import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -28,6 +30,9 @@ function App() {
         <Route path="organizations/new" element={<CreateOrganization />} />
         <Route path="users" element={<UserList />} />
         <Route path="users/new" element={<CreateUser />} />
+        <Route path="applications" element={<ApplicationList />} />
+        <Route path="applications/new" element={<ApplicationForm />} />
+        <Route path="applications/:id/edit" element={<ApplicationForm />} />
         <Route path="sessions" element={<Sessions />} />
         <Route path="security" element={<SecuritySettings />} />
       </Route>

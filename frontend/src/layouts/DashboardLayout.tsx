@@ -34,6 +34,10 @@ export default function DashboardLayout() {
             <Users size={20} />
             Users
           </NavLink>
+          <NavLink to="/applications" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <LayoutDashboard size={20} />
+            Applications
+          </NavLink>
           <NavLink to="/sessions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Shield size={20} />
             Sessions

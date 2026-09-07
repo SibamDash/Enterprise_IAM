@@ -41,7 +41,7 @@ public class ClientManagementIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserRepository userRepository;
+    private OrganizationRepository organizationRepository;
 
     private String adminToken;
 
@@ -49,7 +49,7 @@ public class ClientManagementIntegrationTest {
     void setUp() throws Exception {
         // Assume tenant seed and admin user exists from migrations
         // We log in to get the JWT token for an admin
-        String tenantId = userRepository.findByEmail("admin@acme.com").get().getOrganizationId().toString();
+        String tenantId = organizationRepository.findAll().get(0).getId().toString();
 
         LoginRequest loginReq = new LoginRequest();
         loginReq.setEmail("admin@acme.com");

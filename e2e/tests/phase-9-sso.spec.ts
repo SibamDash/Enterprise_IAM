@@ -27,23 +27,23 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
     // 2. Simulate User opening App A (CRM)
     // The CRM app directs the user to the IAM authorize endpoint.
     // The browser will automatically attach the IAM_SESSION HttpOnly cookie.
-    const crmAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=crm-client&scope=openid profile&redirect_uri=http://127.0.0.1:3000/crm/callback`;
+    const crmAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=crm-client&scope=openid profile&redirect_uri=http://localhost:3000/crm/callback`;
     
     await page.goto(crmAuthUrl);
 
     // Assert that the IAM auto-approves the login and seamlessly redirects back to CRM
     // with an authorization code.
-    await expect(page).toHaveURL(/http:\/\/127\.0\.0\.1:3000\/crm\/callback\?code=.+/);
+    await expect(page).toHaveURL(/http:\/\/localhost:3000\/crm\/callback\?code=.+/);
 
     // 3. Simulate User opening App B (HR)
     // The HR app directs the user to the IAM authorize endpoint.
-    const hrAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=hr-client&scope=openid profile&redirect_uri=http://127.0.0.1:3000/hr/callback`;
+    const hrAuthUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=hr-client&scope=openid profile&redirect_uri=http://localhost:3000/hr/callback`;
     
     await page.goto(hrAuthUrl);
 
     // Assert that the IAM auto-approves the login and seamlessly redirects back to HR
     // with an authorization code, proving the SSO cross-application experience.
-    await expect(page).toHaveURL(/http:\/\/127\.0\.0\.1:3000\/hr\/callback\?code=.+/);
+    await expect(page).toHaveURL(/http:\/\/localhost:3000\/hr\/callback\?code=.+/);
     
     // Explicitly verify no JWT is in the URL (it should only be the code)
     const finalUrl = page.url();

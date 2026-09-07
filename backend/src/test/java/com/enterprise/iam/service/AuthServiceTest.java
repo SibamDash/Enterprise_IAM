@@ -48,6 +48,9 @@ public class AuthServiceTest {
     @Mock
     private MfaService mfaService;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private AuthService authService;
 

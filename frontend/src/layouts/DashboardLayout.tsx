@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Building2, Users, Shield, UserCircle } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Shield, UserCircle, Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { setTenantId } from '../api/client';
 
@@ -45,6 +45,10 @@ export default function DashboardLayout() {
           <NavLink to="/security" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Shield size={20} />
             Security
+          </NavLink>
+          <NavLink to="/audit-logs" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Activity size={20} />
+            Audit Logs
           </NavLink>
           <button 
             className="nav-link" 

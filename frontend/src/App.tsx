@@ -13,6 +13,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import Sessions from './pages/settings/Sessions';
 import SecuritySettings from './pages/settings/SecuritySettings';
+import AuditLogs from './pages/settings/AuditLogs';
 import './App.css';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
         <Route path="applications/:id/edit" element={<ApplicationForm />} />
         <Route path="sessions" element={<Sessions />} />
         <Route path="security" element={<SecuritySettings />} />
+        <Route path="audit-logs" element={<AuditLogs />} />
       </Route>
     </Routes>
   );

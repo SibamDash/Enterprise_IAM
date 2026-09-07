@@ -15,6 +15,7 @@ import com.enterprise.iam.security.LoginAttemptService;
 import com.enterprise.iam.security.TenantContextHolder;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class AuthService {
     private final StringRedisTemplate redisTemplate;
     private final JwtTokenProvider jwtTokenProvider;
     private final MfaService mfaService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final String RESET_TOKEN_PREFIX = "reset_token:";
     private static final Duration RESET_TOKEN_DURATION = Duration.ofMinutes(30);
@@ -58,6 +60,7 @@ public class AuthService {
         
         if (userOpt.isEmpty()) {
             loginAttemptService.loginFailed(attemptKey);
+            publishAuditEvent(tenantId, null, "USER_LOGIN_FAILED", ipAddress, userAgent, "{\"email\":\"" + request.getEmail() + "\"}");
             throw new SecurityException("Invalid email or password");
         }
         
@@ -74,10 +77,13 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             loginAttemptService.loginFailed(attemptKey);
+            publishAuditEvent(tenantId, user.getId(), "USER_LOGIN_FAILED", ipAddress, userAgent, "{\"reason\":\"invalid_password\"}");
             throw new SecurityException("Invalid email or password");
         }
 
         loginAttemptService.loginSucceeded(attemptKey);
+        
+        publishAuditEvent(tenantId, user.getId(), "USER_LOGIN", ipAddress, userAgent, "{}");
         
         if (user.isMfaEnabled()) {
             String mfaToken = jwtTokenProvider.generateMfaToken(user.getId(), user.getOrganizationId(), user.getEmail());
@@ -223,6 +229,7 @@ public class AuthService {
                 .ifPresent(session -> {
                     session.setRevoked(true);
                     sessionRepository.save(session);
+                    publishAuditEvent(tenantId, session.getUserId(), "USER_LOGOUT", null, null, "{}");
                 });
     }
 
@@ -293,5 +300,16 @@ public class AuthService {
     private boolean isPasswordStrong(String password) {
         // Minimal strength check: at least 8 characters
         return password != null && password.length() >= 8;
+    }
+
+    private void publishAuditEvent(UUID organizationId, UUID userId, String eventType, String ipAddress, String userAgent, String details) {
+        eventPublisher.publishEvent(com.enterprise.iam.event.AuditEvent.builder()
+                .organizationId(organizationId)
+                .userId(userId)
+                .eventType(eventType)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .details(details)
+                .build());
     }
 }

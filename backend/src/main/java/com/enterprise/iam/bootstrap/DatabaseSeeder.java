@@ -47,7 +47,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                     "ORG_CREATE", "ORG_READ", "ORG_UPDATE", "ORG_DELETE",
                     "GROUP_CREATE", "GROUP_READ", "GROUP_UPDATE", "GROUP_DELETE",
                     "POLICY_CREATE", "POLICY_READ", "POLICY_UPDATE", "POLICY_DELETE",
-                    "CLIENT_CREATE", "CLIENT_READ", "CLIENT_UPDATE", "CLIENT_DELETE"
+                    "CLIENT_CREATE", "CLIENT_READ", "CLIENT_UPDATE", "CLIENT_DELETE",
+                    "AUDIT_READ"
             )));
             superAdminRole = roleRepository.save(superAdminRole);
 

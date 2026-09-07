@@ -9,6 +9,7 @@ import com.enterprise.iam.repository.UserRepository;
 import com.enterprise.iam.security.TenantContextHolder;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final GroupRepository groupRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public UserDto createUser(CreateUserRequest request) {
@@ -39,6 +41,9 @@ public class UserService {
         user.setLastName(request.getLastName());
         
         user = userRepository.save(user);
+        
+        publishAuditEvent(tenantId, user.getId(), "USER_CREATED", "{\"email\":\"" + user.getEmail() + "\"}");
+        
         return mapToDto(user);
     }
 
@@ -61,6 +66,8 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found or access denied"));
         user.setStatus("INACTIVE");
         userRepository.save(user);
+        
+        publishAuditEvent(getTenantId(), user.getId(), "USER_DEACTIVATED", "{}");
     }
 
     @Transactional
@@ -79,6 +86,9 @@ public class UserService {
         user.getRoles().clear();
         user.getRoles().addAll(roles);
         user = userRepository.save(user);
+        
+        publishAuditEvent(tenantId, user.getId(), "USER_ROLES_ASSIGNED", "{\"roleIds\": " + roleIds + "}");
+        
         return mapToDto(user);
     }
 
@@ -98,6 +108,9 @@ public class UserService {
         user.getGroups().clear();
         user.getGroups().addAll(groups);
         user = userRepository.save(user);
+        
+        publishAuditEvent(tenantId, user.getId(), "USER_GROUPS_ASSIGNED", "{\"groupIds\": " + groupIds + "}");
+        
         return mapToDto(user);
     }
 
@@ -141,5 +154,14 @@ public class UserService {
         }
         
         return dto;
+    }
+
+    private void publishAuditEvent(UUID organizationId, UUID userId, String eventType, String details) {
+        eventPublisher.publishEvent(com.enterprise.iam.event.AuditEvent.builder()
+                .organizationId(organizationId)
+                .userId(userId)
+                .eventType(eventType)
+                .details(details)
+                .build());
     }
 }

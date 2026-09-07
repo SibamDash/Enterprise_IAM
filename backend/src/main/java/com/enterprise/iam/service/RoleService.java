@@ -7,6 +7,7 @@ import com.enterprise.iam.repository.RoleRepository;
 import com.enterprise.iam.security.TenantContextHolder;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class RoleService {
 
     private final RoleRepository roleRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public RoleDto createRole(CreateRoleRequest request) {
@@ -34,6 +36,9 @@ public class RoleService {
         role.setDescription(request.getDescription());
         
         role = roleRepository.save(role);
+        
+        publishAuditEvent(tenantId, null, "ROLE_CREATED", "{\"roleName\":\"" + role.getName() + "\"}");
+        
         return mapToDto(role);
     }
 
@@ -55,6 +60,8 @@ public class RoleService {
         Role role = roleRepository.findByIdAndOrganizationId(id, getTenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Role not found or access denied"));
         roleRepository.delete(role);
+        
+        publishAuditEvent(getTenantId(), null, "ROLE_DELETED", "{\"roleId\":\"" + id + "\"}");
     }
 
     @Transactional
@@ -64,6 +71,9 @@ public class RoleService {
         role.getPermissions().clear();
         role.getPermissions().addAll(permissions);
         role = roleRepository.save(role);
+        
+        publishAuditEvent(getTenantId(), null, "ROLE_PERMISSIONS_ASSIGNED", "{\"roleId\":\"" + id + "\", \"permissions\": " + permissions + "}");
+        
         return mapToDto(role);
     }
 
@@ -85,5 +95,14 @@ public class RoleService {
         dto.setUpdatedAt(role.getUpdatedAt());
         dto.setPermissions(role.getPermissions() != null ? new java.util.HashSet<>(role.getPermissions()) : new java.util.HashSet<>());
         return dto;
+    }
+
+    private void publishAuditEvent(UUID organizationId, UUID userId, String eventType, String details) {
+        eventPublisher.publishEvent(com.enterprise.iam.event.AuditEvent.builder()
+                .organizationId(organizationId)
+                .userId(userId)
+                .eventType(eventType)
+                .details(details)
+                .build());
     }
 }

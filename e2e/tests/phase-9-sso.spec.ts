@@ -62,7 +62,7 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
     // 5. Verify Logout invalidates the server-side session
     // Navigate back to the IAM Dashboard and log out
     await page.goto('http://localhost:3000/');
-    await page.getByRole('button', { name: 'Sign out' }).click();
+    await page.getByRole('button', { name: 'Logout' }).click();
     
     // Wait for redirect to login page
     await expect(page).toHaveURL(/.*\/login/);

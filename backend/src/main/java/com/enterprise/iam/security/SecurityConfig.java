@@ -62,4 +62,26 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
+    @Bean
+    public org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter jwtAuthenticationConverter() {
+        org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter converter = new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            java.util.Collection<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
+            
+            // Extract standard scopes
+            org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter scopesConverter = new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
+            authorities.addAll(scopesConverter.convert(jwt));
+
+            // Extract custom permissions
+            java.util.List<String> permissions = jwt.getClaimAsStringList("permissions");
+            if (permissions != null) {
+                for (String permission : permissions) {
+                    authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(permission));
+                }
+            }
+            return authorities;
+        });
+        return converter;
+    }
 }

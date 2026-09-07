@@ -27,6 +27,7 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import com.enterprise.iam.repository.UserRepository;
+import com.enterprise.iam.repository.ServiceAccountRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
@@ -39,16 +40,20 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 public class AuthorizationServerConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserRepository userRepository;
+    private final ServiceAccountRepository serviceAccountRepository;
 
-    public AuthorizationServerConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserRepository userRepository) {
+    public AuthorizationServerConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserRepository userRepository, ServiceAccountRepository serviceAccountRepository) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userRepository = userRepository;
+        this.serviceAccountRepository = serviceAccountRepository;
     }
 
     @Bean
@@ -127,6 +132,11 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
+    public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    }
+
+    @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
         return (context) -> {
             if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue()) || 
@@ -147,7 +157,16 @@ public class AuthorizationServerConfig {
                         context.getClaims().claim("tenantId", user.getOrganizationId().toString());
                     });
                 } catch (IllegalArgumentException e) {
-                    // Ignore if principal name is not a UUID (e.g. client credentials grant)
+                    // It's a client_credentials grant (Service Account)
+                    serviceAccountRepository.findByClientId(principalName).ifPresent(serviceAccount -> {
+                        context.getClaims().claim("tenantId", serviceAccount.getOrganizationId().toString());
+                        context.getClaims().claim("service_account_id", serviceAccount.getId().toString());
+                        
+                        Set<String> permissions = serviceAccount.getRoles().stream()
+                                .flatMap(role -> role.getPermissions().stream())
+                                .collect(Collectors.toSet());
+                        context.getClaims().claim("permissions", permissions);
+                    });
                 }
             }
         };

@@ -25,6 +25,7 @@ import java.util.UUID;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private final org.springframework.beans.factory.ObjectProvider<org.springframework.security.oauth2.jwt.JwtDecoder> jwtDecoderProvider;
 
 
     @Override
@@ -32,42 +33,78 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                Claims claims = tokenProvider.getClaimsFromToken(jwt);
+            if (StringUtils.hasText(jwt)) {
+                boolean authenticated = false;
                 
-                Boolean isMfa = claims.get("mfa", Boolean.class);
-                if (isMfa != null && isMfa) {
-                    // This is an intermediate MFA token, not a full access token.
-                    // It cannot be used for regular API access.
-                    filterChain.doFilter(request, response);
-                    return;
+                // 1. Try to parse as our local HMAC token
+                if (tokenProvider.validateToken(jwt)) {
+                    Claims claims = tokenProvider.getClaimsFromToken(jwt);
+                    
+                    Boolean isMfa = claims.get("mfa", Boolean.class);
+                    if (isMfa != null && isMfa) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    
+                    String userId = claims.getSubject();
+                    String tenantIdStr = claims.get("tenantId", String.class);
+                    
+                    if (tenantIdStr != null) {
+                        TenantContextHolder.setTenantId(UUID.fromString(tenantIdStr));
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    java.util.List<String> permissions = claims.get("permissions", java.util.List.class);
+                    
+                    java.util.List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = java.util.Collections.emptyList();
+                    if (permissions != null) {
+                        authorities = permissions.stream()
+                                .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
+                                .collect(java.util.stream.Collectors.toList());
+                    }
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userId, null, authorities);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    authenticated = true;
                 }
                 
-                String userId = claims.getSubject();
-                String tenantIdStr = claims.get("tenantId", String.class);
-                String email = claims.get("email", String.class);
-                
-                if (tenantIdStr != null) {
-                    // Make sure TenantContextHolder is populated for the request
-                    TenantContextHolder.setTenantId(UUID.fromString(tenantIdStr));
+                // 2. Try to parse as OAuth2 RSA token if HMAC failed
+                if (!authenticated) {
+                    try {
+                        org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder = jwtDecoderProvider.getIfAvailable();
+                        if (jwtDecoder != null) {
+                            org.springframework.security.oauth2.jwt.Jwt decodedJwt = jwtDecoder.decode(jwt);
+                            
+                            String userId = decodedJwt.getSubject();
+                            String tenantIdStr = decodedJwt.getClaimAsString("tenantId");
+                            
+                            if (tenantIdStr != null) {
+                                TenantContextHolder.setTenantId(UUID.fromString(tenantIdStr));
+                            }
+                            
+                            java.util.List<String> permissions = decodedJwt.getClaimAsStringList("permissions");
+                            java.util.List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = java.util.Collections.emptyList();
+                            
+                            if (permissions != null) {
+                                authorities = permissions.stream()
+                                        .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
+                                        .collect(java.util.stream.Collectors.toList());
+                            }
+                            
+                            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                    userId, null, authorities);
+                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        }
+                    } catch (org.springframework.security.oauth2.jwt.JwtException e) {
+                        // It's neither a valid HMAC nor a valid RSA token
+                        logger.warn("Invalid JWT token: " + e.getMessage());
+                    }
                 }
-
-                // Extract permissions from JWT claims
-                @SuppressWarnings("unchecked")
-                java.util.List<String> permissions = claims.get("permissions", java.util.List.class);
-                
-                java.util.List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = java.util.Collections.emptyList();
-                if (permissions != null) {
-                    authorities = permissions.stream()
-                            .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
-                            .collect(java.util.stream.Collectors.toList());
-                }
-
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userId, null, authorities);
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);

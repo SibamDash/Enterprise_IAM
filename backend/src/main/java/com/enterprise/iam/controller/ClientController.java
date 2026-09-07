@@ -22,13 +22,13 @@ public class ClientController {
     private final ClientService clientService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('organizations:admin')")
+    @PreAuthorize("hasAuthority('CLIENT_READ')")
     public ResponseEntity<List<ClientDto>> getAllClients() {
         return ResponseEntity.ok(clientService.getAllClients());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('organizations:admin')")
+    @PreAuthorize("hasAuthority('CLIENT_READ')")
     public ResponseEntity<ClientDto> getClientById(@PathVariable String id) {
         try {
             return ResponseEntity.ok(clientService.getClientById(id));
@@ -38,7 +38,7 @@ public class ClientController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('organizations:admin')")
+    @PreAuthorize("hasAuthority('CLIENT_CREATE')")
     public ResponseEntity<ClientSecretResponse> createClient(@Valid @RequestBody CreateClientRequest request) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(clientService.createClient(request));
@@ -48,7 +48,7 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('organizations:admin')")
+    @PreAuthorize("hasAuthority('CLIENT_UPDATE')")
     public ResponseEntity<ClientDto> updateClient(@PathVariable String id, @Valid @RequestBody UpdateClientRequest request) {
         try {
             return ResponseEntity.ok(clientService.updateClient(id, request));
@@ -58,7 +58,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('organizations:admin')")
+    @PreAuthorize("hasAuthority('CLIENT_DELETE')")
     public ResponseEntity<Void> deleteClient(@PathVariable String id) {
         try {
             clientService.deleteClient(id);
@@ -69,7 +69,7 @@ public class ClientController {
     }
 
     @PostMapping("/{id}/rotate-secret")
-    @PreAuthorize("hasAuthority('organizations:admin')")
+    @PreAuthorize("hasAuthority('CLIENT_UPDATE')")
     public ResponseEntity<ClientSecretResponse> rotateClientSecret(@PathVariable String id) {
         try {
             return ResponseEntity.ok(clientService.rotateClientSecret(id));

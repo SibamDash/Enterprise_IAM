@@ -5,7 +5,7 @@ test.describe('Phase 2: Authentication', () => {
     // Robustly wait for the frontend to be ready and load the page
     await expect.poll(async () => {
       try {
-        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        const response = await page.goto('http://127.0.0.1:3000/login', { timeout: 5000 });
         return response && response.status() === 200;
       } catch (e) {
         return false;
@@ -30,7 +30,7 @@ test.describe('Phase 2: Authentication', () => {
   test('should allow user to request a password reset', async ({ page }) => {
     await expect.poll(async () => {
       try {
-        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        const response = await page.goto('http://127.0.0.1:3000/login', { timeout: 5000 });
         return response && response.status() === 200;
       } catch (e) {
         return false;

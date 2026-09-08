@@ -7,7 +7,7 @@ test.describe('Phase 3: Sessions & Token Management', () => {
     let tenantId = '';
     await expect.poll(async () => {
       try {
-        const orgsRes = await request.get('http://localhost:8080/api/v1/organizations');
+        const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
         if (orgsRes.ok()) {
           const orgs = await orgsRes.json();
           if (orgs.content && orgs.content.length > 0) {
@@ -24,7 +24,7 @@ test.describe('Phase 3: Sessions & Token Management', () => {
     // 2. Login via UI with seeded admin
     await expect.poll(async () => {
       try {
-        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        const response = await page.goto('http://127.0.0.1:3000/login', { timeout: 5000 });
         return response && response.status() === 200;
       } catch (e) {
         return false;

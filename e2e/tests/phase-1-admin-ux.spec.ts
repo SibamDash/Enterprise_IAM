@@ -3,12 +3,17 @@ import { test, expect } from '@playwright/test';
 test.describe('Phase 1: Admin UX Journey', () => {
   test('should create an organization and then create a user within it', async ({ page, request }) => {
     // 1. Visit the application and login
-    await page.goto('http://localhost:3000/login');
+    // Robustly wait for the frontend to be ready and load the page
+    await expect.poll(async () => {
+      try {
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        return response && response.status() === 200;
+      } catch (e) {
+        return false;
+      }
+    }, { timeout: 30000 }).toBeTruthy();
+    
     await expect(page).toHaveTitle(/Enterprise IAM/);
-
-    // Get the seeded organization ID
-    // Ensure frontend is fully loaded
-    await page.waitForLoadState('networkidle');
 
     // Wait for the backend to be fully seeded with retry logic
     let seededTenantId = '';

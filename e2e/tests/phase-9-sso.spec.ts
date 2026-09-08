@@ -3,7 +3,16 @@ import { test, expect } from '@playwright/test';
 test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
   test('should allow user to seamlessly authenticate to multiple applications without re-entering credentials', async ({ page, request }) => {
     // 1. Visit the application and login to establish IAM session
-    await page.goto('http://localhost:3000/login');
+    // Robustly wait for the frontend to be ready and load the page
+    await expect.poll(async () => {
+      try {
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        return response && response.status() === 200;
+      } catch (e) {
+        return false;
+      }
+    }, { timeout: 30000 }).toBeTruthy();
+    
     await expect(page).toHaveTitle(/Enterprise IAM/);
 
     // Wait for the backend to be fully seeded with retry logic
@@ -25,7 +34,6 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
     }, { timeout: 30000 }).toBeTruthy();
 
     // Login using known admin credentials
-    await page.waitForLoadState('networkidle');
     const tenantIdLocator = page.locator('#tenantId');
     await tenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });
     await tenantIdLocator.fill(seededTenantId);

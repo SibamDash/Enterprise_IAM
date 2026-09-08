@@ -22,8 +22,14 @@ test.describe('Phase 3: Sessions & Token Management', () => {
     }, { timeout: 30000 }).toBeTruthy();
 
     // 2. Login via UI with seeded admin
-    await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await expect.poll(async () => {
+      try {
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        return response && response.status() === 200;
+      } catch (e) {
+        return false;
+      }
+    }, { timeout: 30000 }).toBeTruthy();
     
     const tenantIdLocator = page.locator('#tenantId');
     await tenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });

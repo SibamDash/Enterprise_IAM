@@ -2,8 +2,15 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Phase 2: Authentication', () => {
   test('should allow user to navigate to login and see errors for invalid credentials', async ({ page }) => {
-    // Navigate to Login directly
-    await page.goto('http://localhost:3000/login');
+    // Robustly wait for the frontend to be ready and load the page
+    await expect.poll(async () => {
+      try {
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        return response && response.status() === 200;
+      } catch (e) {
+        return false;
+      }
+    }, { timeout: 30000 }).toBeTruthy();
     await expect(page).toHaveTitle(/Enterprise IAM/);
 
     await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
@@ -21,7 +28,14 @@ test.describe('Phase 2: Authentication', () => {
   });
 
   test('should allow user to request a password reset', async ({ page }) => {
-    await page.goto('http://localhost:3000/login');
+    await expect.poll(async () => {
+      try {
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
+        return response && response.status() === 200;
+      } catch (e) {
+        return false;
+      }
+    }, { timeout: 30000 }).toBeTruthy();
     
     // Click Forgot Password
     await page.getByRole('link', { name: 'Forgot password?' }).click();

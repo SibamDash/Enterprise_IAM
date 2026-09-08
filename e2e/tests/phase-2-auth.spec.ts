@@ -9,9 +9,9 @@ test.describe('Phase 2: Authentication', () => {
     await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
 
     // Fill invalid credentials
-    await page.getByLabel('Organization ID (Tenant)').fill('123e4567-e89b-12d3-a456-426614174000');
-    await page.getByLabel('Email address').fill('nonexistent@example.com');
-    await page.getByLabel('Password').fill('wrongpassword');
+    await page.fill('#tenantId', '123e4567-e89b-12d3-a456-426614174000');
+    await page.fill('#email', 'nonexistent@example.com');
+    await page.fill('#password', 'wrongpassword');
     
     await page.getByRole('button', { name: 'Sign in' }).click();
 
@@ -28,8 +28,8 @@ test.describe('Phase 2: Authentication', () => {
     await expect(page.getByRole('heading', { name: 'Forgot password?' })).toBeVisible();
 
     // Fill reset form
-    await page.getByLabel('Organization ID (Tenant)').fill('123e4567-e89b-12d3-a456-426614174000');
-    await page.getByLabel('Email address').fill('user@example.com');
+    await page.fill('#tenantId', '123e4567-e89b-12d3-a456-426614174000');
+    await page.fill('#email', 'user@example.com');
     
     await page.getByRole('button', { name: 'Send reset link' }).click();
 

@@ -12,9 +12,9 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
     const seededTenantId = orgs.content[0].id;
 
     // Login using known admin credentials
-    await page.getByLabel('Organization ID (Tenant)').fill(seededTenantId);
-    await page.getByLabel('Email address').fill('admin@acme.com');
-    await page.getByLabel('Password').fill('SecurePassword123!');
+    await page.fill('#tenantId', seededTenantId);
+    await page.fill('#email', 'admin@acme.com');
+    await page.fill('#password', 'SecurePassword123!');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     // Wait for login to complete and dashboard to load

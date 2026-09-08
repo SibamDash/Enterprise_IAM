@@ -11,17 +11,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(value = HealthController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class})
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+
+@WebMvcTest(
+    value = HealthController.class, 
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class},
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE, 
+        classes = com.enterprise.iam.security.JwtAuthenticationFilter.class
+    )
+)
 class HealthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @org.springframework.boot.test.mock.mockito.MockBean
-    private com.enterprise.iam.security.JwtTokenProvider jwtTokenProvider;
-
-    @org.springframework.boot.test.mock.mockito.MockBean
-    private com.enterprise.iam.repository.UserRepository userRepository;
 
     @Test
     void healthCheck_returnsUpStatus() throws Exception {

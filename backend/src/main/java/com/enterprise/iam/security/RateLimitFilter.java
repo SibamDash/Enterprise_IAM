@@ -40,8 +40,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return Bucket.builder().addLimit(limit).build();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.rate-limit.enabled:true}")
+    private boolean enabled;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        if (!enabled) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String ip = getClientIP(request);
         String path = request.getRequestURI();
 

@@ -69,4 +69,10 @@ public class OAuth2IntegrationTest {
         mockMvc.perform(get("/oauth2/authorize?response_type=code&client_id=oauth2-test-client&scope=openid%20profile&redirect_uri=http://localhost:8080/authorized"))
                 .andExpect(status().is3xxRedirection());
     }
+
+    @Test
+    void testInvalidRedirectUri() throws Exception {
+        mockMvc.perform(get("/oauth2/authorize?response_type=code&client_id=oauth2-test-client&scope=openid%20profile&redirect_uri=http://malicious-site.com/callback"))
+                .andExpect(status().isBadRequest());
+    }
 }

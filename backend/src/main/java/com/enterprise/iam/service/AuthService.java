@@ -159,7 +159,7 @@ public class AuthService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = SecurityException.class)
     public LoginResponse refreshToken(RefreshRequest request, String userAgent, String ipAddress) {
         UUID tenantId = TenantContextHolder.getTenantId();
         if (tenantId == null) {
@@ -298,8 +298,14 @@ public class AuthService {
     }
 
     private boolean isPasswordStrong(String password) {
-        // Minimal strength check: at least 8 characters
-        return password != null && password.length() >= 8;
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        boolean hasUppercase = !password.equals(password.toLowerCase());
+        boolean hasLowercase = !password.equals(password.toUpperCase());
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSpecial = password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*");
+        return hasUppercase && hasLowercase && hasDigit && hasSpecial;
     }
 
     private void publishAuditEvent(UUID organizationId, UUID userId, String eventType, String ipAddress, String userAgent, String details) {

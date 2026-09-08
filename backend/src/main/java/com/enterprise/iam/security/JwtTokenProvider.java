@@ -21,6 +21,12 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration.ms:900000}") // Default 15 minutes
     private long jwtExpirationMs;
 
+    @Value("${jwt.issuer:enterprise-iam}")
+    private String jwtIssuer;
+
+    @Value("${jwt.audience:enterprise-iam-client}")
+    private String jwtAudience;
+
     public String generateToken(UUID userId, UUID tenantId, String email, Set<String> permissions) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
@@ -30,6 +36,8 @@ public class JwtTokenProvider {
                 .claim("tenantId", tenantId.toString())
                 .claim("email", email)
                 .claim("permissions", permissions)
+                .issuer(jwtIssuer)
+                .audience().add(jwtAudience).and()
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -45,6 +53,8 @@ public class JwtTokenProvider {
                 .claim("tenantId", tenantId.toString())
                 .claim("email", email)
                 .claim("mfa", true) // Indicates this is an intermediate MFA token
+                .issuer(jwtIssuer)
+                .audience().add(jwtAudience).and()
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -54,6 +64,8 @@ public class JwtTokenProvider {
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
+                .requireIssuer(jwtIssuer)
+                .requireAudience(jwtAudience)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -61,7 +73,12 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
+            Jwts.parser()
+                .verifyWith(getSigningKey())
+                .requireIssuer(jwtIssuer)
+                .requireAudience(jwtAudience)
+                .build()
+                .parseSignedClaims(token);
             return true;
         } catch (Exception ex) {
             return false;

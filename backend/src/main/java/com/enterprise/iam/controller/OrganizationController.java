@@ -19,22 +19,26 @@ public class OrganizationController {
 
     private final OrganizationService organizationService;
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ORG_CREATE')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrganizationDto createOrganization(@Valid @RequestBody CreateOrganizationRequest request) {
         return organizationService.createOrganization(request);
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ORG_READ')")
     @GetMapping("/{id}")
     public OrganizationDto getOrganization(@PathVariable UUID id) {
         return organizationService.getOrganization(id);
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ORG_READ')")
     @GetMapping
     public Page<OrganizationDto> listOrganizations(Pageable pageable) {
         return organizationService.listOrganizations(pageable);
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ORG_DELETE')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deactivateOrganization(@PathVariable UUID id) {

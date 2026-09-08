@@ -39,7 +39,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/api/v1/health", "/api/v1/organizations", "/api/v1/organizations/**").permitAll()
+                .requestMatchers("/api/v1/auth/**", "/api/v1/health").permitAll()
                 .requestMatchers("/api/v1/sessions/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -48,7 +48,7 @@ public class SecurityConfig {
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.deny())
                 .xssProtection(xss -> xss.disable()) // Spring Security 6 defaults
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none'; sandbox"))
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'"))
                 .httpStrictTransportSecurity(hsts -> hsts
                     .includeSubDomains(true)
                     .maxAgeInSeconds(31536000)

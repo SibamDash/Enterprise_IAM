@@ -3,14 +3,31 @@ import { test, expect } from '@playwright/test';
 test.describe('Phase 3: Sessions & Token Management', () => {
 
   test('User can view and manage their sessions', async ({ page, request }) => {
-    // 1. Get the seeded organization ID
-    const orgsRes = await request.get('http://localhost:8080/api/v1/organizations');
-    const orgs = await orgsRes.json();
-    const tenantId = orgs.content[0].id;
+    // Wait for the backend to be fully seeded with retry logic
+    let tenantId = '';
+    await expect.poll(async () => {
+      try {
+        const orgsRes = await request.get('http://localhost:8080/api/v1/organizations');
+        if (orgsRes.ok()) {
+          const orgs = await orgsRes.json();
+          if (orgs.content && orgs.content.length > 0) {
+            tenantId = orgs.content[0].id;
+            return true;
+          }
+        }
+      } catch (e) {
+        // Ignore connection errors and retry
+      }
+      return false;
+    }, { timeout: 30000 }).toBeTruthy();
 
     // 2. Login via UI with seeded admin
     await page.goto('/login');
-    await page.fill('#tenantId', tenantId);
+    await page.waitForLoadState('networkidle');
+    
+    const tenantIdLocator = page.locator('#tenantId');
+    await tenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });
+    await tenantIdLocator.fill(tenantId);
     await page.fill('#email', 'admin@acme.com');
     await page.fill('#password', 'SecurePassword123!');
     await page.click('button[type="submit"]');

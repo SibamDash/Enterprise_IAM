@@ -6,13 +6,28 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
     await page.goto('http://localhost:3000/login');
     await expect(page).toHaveTitle(/Enterprise IAM/);
 
-    // Get the seeded organization ID
-    const orgsRes = await request.get('http://localhost:8080/api/v1/organizations');
-    const orgs = await orgsRes.json();
-    const seededTenantId = orgs.content[0].id;
+    // Wait for the backend to be fully seeded with retry logic
+    let seededTenantId = '';
+    await expect.poll(async () => {
+      try {
+        const orgsRes = await request.get('http://localhost:8080/api/v1/organizations');
+        if (orgsRes.ok()) {
+          const orgs = await orgsRes.json();
+          if (orgs.content && orgs.content.length > 0) {
+            seededTenantId = orgs.content[0].id;
+            return true;
+          }
+        }
+      } catch (e) {
+        // Ignore connection errors and retry
+      }
+      return false;
+    }, { timeout: 30000 }).toBeTruthy();
 
     // Login using known admin credentials
-    const tenantIdLocator = page.locator('#tenantId, input[type="text"]').first();
+    await page.waitForLoadState('networkidle');
+    const tenantIdLocator = page.locator('#tenantId');
+    await tenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });
     await tenantIdLocator.fill(seededTenantId);
     await page.fill('#email', 'admin@acme.com');
     await page.fill('#password', 'SecurePassword123!');

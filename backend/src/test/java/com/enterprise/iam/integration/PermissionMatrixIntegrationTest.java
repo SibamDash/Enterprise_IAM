@@ -50,6 +50,9 @@ public class PermissionMatrixIntegrationTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private com.enterprise.iam.security.RateLimitFilter rateLimitFilter;
+
     private UUID tenantId;
     private User testUser;
     private Role adminRole;
@@ -57,6 +60,8 @@ public class PermissionMatrixIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        rateLimitFilter.clearBuckets();
+        
         Organization org = new Organization();
         org.setName("RBAC Test Org");
         org = organizationRepository.save(org);

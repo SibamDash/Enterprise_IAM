@@ -20,6 +20,9 @@ class HealthControllerTest {
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.enterprise.iam.security.JwtTokenProvider jwtTokenProvider;
 
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.enterprise.iam.repository.UserRepository userRepository;
+
     @Test
     void healthCheck_returnsUpStatus() throws Exception {
         mockMvc.perform(get("/api/v1/health"))

@@ -48,12 +48,17 @@ public class SecurityControlsIntegrationTest {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private com.enterprise.iam.security.RateLimitFilter rateLimitFilter;
+
     private UUID tenantId;
     private User testUser;
     private String validToken;
 
     @BeforeEach
     void setUp() {
+        rateLimitFilter.clearBuckets();
+        
         Organization org = new Organization();
         org.setName("Security Test Org");
         org = organizationRepository.save(org);
@@ -83,12 +88,14 @@ public class SecurityControlsIntegrationTest {
     void testApiRateLimiting() throws Exception {
         // Send 101 requests rapidly to API
         for (int i = 0; i < 100; i++) {
-            mockMvc.perform(get("/api/v1/health"))
+            mockMvc.perform(get("/api/v1/health")
+                    .header("X-Forwarded-For", "192.168.1.100"))
                     .andExpect(status().isOk());
         }
         
         // The 101st request should be rate-limited
-        mockMvc.perform(get("/api/v1/health"))
+        mockMvc.perform(get("/api/v1/health")
+                .header("X-Forwarded-For", "192.168.1.100"))
                 .andExpect(status().isTooManyRequests());
     }
 
@@ -97,11 +104,13 @@ public class SecurityControlsIntegrationTest {
         String loginJson = "{\"email\":\"sec-user@example.com\",\"password\":\"WrongPassword\"}";
         for (int i = 0; i < 10; i++) {
             mockMvc.perform(post("/api/v1/auth/login")
+                    .header("X-Forwarded-For", "192.168.1.101")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(loginJson));
         }
 
         mockMvc.perform(post("/api/v1/auth/login")
+                .header("X-Forwarded-For", "192.168.1.101")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginJson))
                 .andExpect(status().isTooManyRequests());

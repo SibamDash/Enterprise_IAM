@@ -26,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final org.springframework.beans.factory.ObjectProvider<org.springframework.security.oauth2.jwt.JwtDecoder> jwtDecoderProvider;
+    private final com.enterprise.iam.repository.UserRepository userRepository;
 
 
     @Override
@@ -63,12 +64,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 .collect(java.util.stream.Collectors.toList());
                     }
 
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userId, null, authorities);
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    boolean userEnabled = true;
+                    if (userId != null) {
+                       try {
+                           UUID id = UUID.fromString(userId);
+                           var userOpt = userRepository.findById(id);
+                           if (userOpt.isPresent() && !"ACTIVE".equals(userOpt.get().getStatus())) {
+                               userEnabled = false;
+                           }
+                       } catch (Exception ignored) {}
+                    }
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    authenticated = true;
+                    if (userEnabled) {
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                userId, null, authorities);
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        authenticated = true;
+                    }
                 }
                 
                 // 2. Try to parse as OAuth2 RSA token if HMAC failed
@@ -94,11 +108,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                         .collect(java.util.stream.Collectors.toList());
                             }
                             
-                            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                    userId, null, authorities);
-                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            boolean userEnabled = true;
+                            try {
+                                UUID id = UUID.fromString(userId);
+                                var userOpt = userRepository.findById(id);
+                                if (userOpt.isPresent() && !"ACTIVE".equals(userOpt.get().getStatus())) {
+                                    userEnabled = false;
+                                }
+                            } catch (Exception ignored) {}
 
-                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                            if (userEnabled) {
+                                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                        userId, null, authorities);
+                                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                                SecurityContextHolder.getContext().setAuthentication(authentication);
+                            }
                         }
                     } catch (org.springframework.security.oauth2.jwt.JwtException e) {
                         // It's neither a valid HMAC nor a valid RSA token

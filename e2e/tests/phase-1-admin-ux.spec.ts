@@ -11,7 +11,8 @@ test.describe('Phase 1: Admin UX Journey', () => {
     const orgs = await orgsRes.json();
     const seededTenantId = orgs.content[0].id;
 
-    await page.fill('#tenantId', seededTenantId);
+    const tenantIdLocator = page.locator('#tenantId, input[type="text"]').first();
+    await tenantIdLocator.fill(seededTenantId);
     await page.fill('#email', 'admin@acme.com');
     await page.fill('#password', 'SecurePassword123!');
     await page.getByRole('button', { name: 'Sign in' }).click();

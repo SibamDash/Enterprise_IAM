@@ -9,7 +9,8 @@ test.describe('Phase 2: Authentication', () => {
     await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
 
     // Fill invalid credentials
-    await page.fill('#tenantId', '123e4567-e89b-12d3-a456-426614174000');
+    const tenantIdLocator = page.locator('#tenantId, input[type="text"]').first();
+    await tenantIdLocator.fill('123e4567-e89b-12d3-a456-426614174000');
     await page.fill('#email', 'nonexistent@example.com');
     await page.fill('#password', 'wrongpassword');
     
@@ -28,7 +29,8 @@ test.describe('Phase 2: Authentication', () => {
     await expect(page.getByRole('heading', { name: 'Forgot password?' })).toBeVisible();
 
     // Fill reset form
-    await page.fill('#tenantId', '123e4567-e89b-12d3-a456-426614174000');
+    const resetTenantIdLocator = page.locator('#tenantId, input[type="text"]').first();
+    await resetTenantIdLocator.fill('123e4567-e89b-12d3-a456-426614174000');
     await page.fill('#email', 'user@example.com');
     
     await page.getByRole('button', { name: 'Send reset link' }).click();

@@ -20,3 +20,17 @@ services:
       SPRING_DATASOURCE_PASSWORD: iam_password
       SPRING_REDIS_HOST: redis
       SPRING_PROFILES_ACTIVE: docker
+
+  test-runner:
+    image: eclipse-temurin:21-jdk-jammy
+    volumes:
+      - .:/app
+      - m2_cache:/root/.m2
+    working_dir: /app/backend
+    environment:
+      SPRING_REDIS_HOST: redis
+    depends_on:
+      - redis
+
+volumes:
+  m2_cache:

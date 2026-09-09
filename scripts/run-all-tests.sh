@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+echo "==> Starting Redis and Postgres for backend tests"
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d redis postgres
+
 echo "==> Backend unit + integration tests"
-(cd backend && MSYS_NO_PATHCONV=1 docker run --rm -v "/$(pwd)":/app -v m2_cache:/root/.m2 -w /app -v //var/run/docker.sock:/var/run/docker.sock eclipse-temurin:21-jdk-jammy ./mvnw -q test)
+MSYS_NO_PATHCONV=1 docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm test-runner ./mvnw -q test -Dspring.data.redis.host=redis
 
 echo "==> Frontend unit tests"
 (cd frontend && npm run test -- --run)

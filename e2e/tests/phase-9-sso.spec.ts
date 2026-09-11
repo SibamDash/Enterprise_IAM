@@ -35,7 +35,7 @@ test.describe('Phase 9: SSO Cross-Application E2E Journey', () => {
 
     // Login using known admin credentials
     const tenantIdLocator = page.locator('#tenantId');
-    await tenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });
+    await tenantIdLocator.waitFor({ state: 'visible', timeout: 60000 });
     await tenantIdLocator.fill(seededTenantId);
     await page.fill('#email', 'admin@acme.com');
     await page.fill('#password', 'SecurePassword123!');

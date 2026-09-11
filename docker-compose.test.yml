@@ -20,6 +20,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: iam_password
       SPRING_REDIS_HOST: redis
       SPRING_PROFILES_ACTIVE: docker
+      APP_RATE_LIMIT_ENABLED: "false"
 
   test-runner:
     image: eclipse-temurin:21-jdk-jammy

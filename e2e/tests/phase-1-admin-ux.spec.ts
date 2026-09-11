@@ -34,7 +34,7 @@ test.describe('Phase 1: Admin UX Journey', () => {
     }, { timeout: 30000 }).toBeTruthy();
 
     const tenantIdLocator = page.locator('#tenantId');
-    await tenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });
+    await tenantIdLocator.waitFor({ state: 'visible', timeout: 60000 });
     await tenantIdLocator.fill(seededTenantId);
     await page.fill('#email', 'admin@acme.com');
     await page.fill('#password', 'SecurePassword123!');

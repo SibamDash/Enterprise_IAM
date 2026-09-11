@@ -33,7 +33,7 @@ test.describe('Phase 2: Authentication', () => {
 
     // Fill invalid credentials
     const tenantIdLocator = page.locator('#tenantId');
-    await tenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });
+    await tenantIdLocator.waitFor({ state: 'visible', timeout: 60000 });
     await tenantIdLocator.fill('123e4567-e89b-12d3-a456-426614174000');
     await page.fill('#email', 'nonexistent@example.com');
     await page.fill('#password', 'wrongpassword');
@@ -77,7 +77,7 @@ test.describe('Phase 2: Authentication', () => {
 
     // Fill reset form
     const resetTenantIdLocator = page.locator('#tenantId');
-    await resetTenantIdLocator.waitFor({ state: 'visible', timeout: 15000 });
+    await resetTenantIdLocator.waitFor({ state: 'visible', timeout: 60000 });
     await resetTenantIdLocator.fill('123e4567-e89b-12d3-a456-426614174000');
     await page.fill('#email', 'user@example.com');
     

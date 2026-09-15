@@ -18,6 +18,7 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
 
     List<Session> findByUserIdAndTenantIdAndRevokedFalse(UUID userId, UUID tenantId);
 
+    long countByTenantIdAndRevokedFalse(UUID tenantId);
     @Modifying
     @Query("UPDATE Session s SET s.revoked = true WHERE s.tokenFamily = :tokenFamily AND s.tenantId = :tenantId")
     void revokeTokenFamily(@Param("tokenFamily") UUID tokenFamily, @Param("tenantId") UUID tenantId);

@@ -20,7 +20,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Page<User> findAllByOrganizationId(UUID organizationId, Pageable pageable);
     
     boolean existsByEmailAndOrganizationId(String email, UUID organizationId);
-
+    
+    long countByOrganizationId(UUID organizationId);
+    
+    long countByOrganizationIdAndStatus(UUID organizationId, String status);
     @EntityGraph(attributePaths = {"roles", "groups", "groups.roles"})
     Optional<User> findWithRolesById(UUID id);
 

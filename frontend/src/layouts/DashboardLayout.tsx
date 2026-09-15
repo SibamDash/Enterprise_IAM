@@ -34,21 +34,41 @@ export default function DashboardLayout() {
             <Users size={20} />
             Users
           </NavLink>
+          <NavLink to="/groups" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Users size={20} />
+            Groups
+          </NavLink>
+          <NavLink to="/roles" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Shield size={20} />
+            Roles
+          </NavLink>
+          <NavLink to="/permissions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Shield size={20} />
+            Permissions
+          </NavLink>
           <NavLink to="/applications" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <LayoutDashboard size={20} />
             Applications
+          </NavLink>
+          <NavLink to="/policies" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Shield size={20} />
+            Policies
           </NavLink>
           <NavLink to="/sessions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Shield size={20} />
             Sessions
           </NavLink>
-          <NavLink to="/security" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <Shield size={20} />
-            Security
-          </NavLink>
           <NavLink to="/audit-logs" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Activity size={20} />
             Audit Logs
+          </NavLink>
+          <NavLink to="/security-events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Shield size={20} />
+            Security Events
+          </NavLink>
+          <NavLink to="/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <UserCircle size={20} />
+            Settings
           </NavLink>
           <button 
             className="nav-link" 

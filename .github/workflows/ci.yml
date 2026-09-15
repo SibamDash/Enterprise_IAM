@@ -101,6 +101,24 @@ jobs:
             docker compose -f docker-compose.yml -f docker-compose.test.yml logs
             exit 1
           fi
+      - name: Wait for frontend health
+        run: |
+          echo "Waiting for frontend service to become healthy..."
+          READY=false
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000 > /dev/null; then
+              echo "Frontend is healthy and reachable!"
+              READY=true
+              break
+            fi
+            echo "Waiting for frontend ($i/60)..."
+            sleep 2
+          done
+          if [ "$READY" = false ]; then
+            echo "Frontend failed to become healthy within timeout"
+            docker compose -f docker-compose.yml -f docker-compose.test.yml logs
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: "20"

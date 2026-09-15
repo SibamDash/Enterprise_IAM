@@ -6,10 +6,27 @@ test.describe('Journey A: New Employee', () => {
     // Note: Due to test environment limitations (Docker access missing),
     // these E2E tests are structured to run when the dev server is active manually.
 
+    // 1. Fetch seeded tenant ID
+    let seededTenantId = '';
+    await expect.poll(async () => {
+      try {
+        const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
+        if (orgsRes.ok()) {
+          const orgs = await orgsRes.json();
+          if (orgs.content && orgs.content.length > 0) {
+            seededTenantId = orgs.content[0].id;
+            return true;
+          }
+        }
+      } catch (e) {}
+      return false;
+    }, { timeout: 30000 }).toBeTruthy();
+
     // 1. Admin login
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'admin@example.com');
-    await page.fill('input[type="password"]', 'Admin123!');
+    await page.fill('#tenantId', seededTenantId);
+    await page.fill('input[type="email"]', 'admin@acme.com');
+    await page.fill('input[type="password"]', 'SecurePassword123!');
     await page.click('button[type="submit"]');
 
     // Should redirect to dashboard
@@ -37,8 +54,14 @@ test.describe('Journey A: New Employee', () => {
 // Journey B & C — Authorization
 test.describe('Journeys B & C: Authorization', () => {
   test('should enforce role-based access control', async ({ page }) => {
-    // 1. Login with limited user
+    // 1. Fetch seeded tenant ID
+    const orgsRes = await page.request.get('http://127.0.0.1:8080/api/v1/organizations');
+    const orgs = await orgsRes.json();
+    const seededTenantId = orgs.content[0].id;
+
+    // 2. Login with limited user
     await page.goto('/login');
+    await page.fill('#tenantId', seededTenantId);
     await page.fill('input[type="email"]', 'john.doe@example.com');
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
@@ -55,10 +78,16 @@ test.describe('Journeys B & C: Authorization', () => {
 // Journey D — SSO
 test.describe('Journey D: SSO', () => {
   test('should recognize existing session for SSO', async ({ page, context }) => {
-    // 1. User logs in
+    // 1. Fetch seeded tenant ID
+    const orgsRes = await page.request.get('http://127.0.0.1:8080/api/v1/organizations');
+    const orgs = await orgsRes.json();
+    const seededTenantId = orgs.content[0].id;
+
+    // 2. User logs in
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'admin@example.com');
-    await page.fill('input[type="password"]', 'Admin123!');
+    await page.fill('#tenantId', seededTenantId);
+    await page.fill('input[type="email"]', 'admin@acme.com');
+    await page.fill('input[type="password"]', 'SecurePassword123!');
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL('/');
 
@@ -78,11 +107,19 @@ test.describe('Journey E: Token replay', () => {
     // Note: Token replay is best tested via API integration since manipulating token logic in browser is complex.
     // We send an API request here to test it.
     
+    // 0. Fetch seeded tenant ID
+    const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
+    const orgs = await orgsRes.json();
+    const seededTenantId = orgs.content[0].id;
+
     // 1. Initial Login via API
-    const loginRes = await request.post('/api/v1/auth/login', {
+    const loginRes = await request.post('http://127.0.0.1:8080/api/v1/auth/login', {
+      headers: {
+        'X-Tenant-ID': seededTenantId
+      },
       data: {
-        email: 'admin@example.com',
-        password: 'Admin123!',
+        email: 'admin@acme.com',
+        password: 'SecurePassword123!',
       }
     });
     
@@ -90,7 +127,10 @@ test.describe('Journey E: Token replay', () => {
     const { refreshToken } = await loginRes.json();
     
     // 2. Refresh the token
-    const refreshRes = await request.post('/api/v1/auth/refresh', {
+    const refreshRes = await request.post('http://127.0.0.1:8080/api/v1/auth/refresh', {
+      headers: {
+        'X-Tenant-ID': seededTenantId
+      },
       data: {
         refreshToken: refreshToken
       }
@@ -98,7 +138,10 @@ test.describe('Journey E: Token replay', () => {
     expect(refreshRes.ok()).toBeTruthy();
     
     // 3. Token Replay (use the same original refresh token again)
-    const replayRes = await request.post('/api/v1/auth/refresh', {
+    const replayRes = await request.post('http://127.0.0.1:8080/api/v1/auth/refresh', {
+      headers: {
+        'X-Tenant-ID': seededTenantId
+      },
       data: {
         refreshToken: refreshToken
       }

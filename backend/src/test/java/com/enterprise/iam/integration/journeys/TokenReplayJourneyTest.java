@@ -8,6 +8,7 @@ import com.enterprise.iam.repository.SessionRepository;
 import com.enterprise.iam.repository.UserRepository;
 import com.enterprise.iam.security.JwtTokenProvider;
 import com.enterprise.iam.service.AuthService;
+import com.enterprise.iam.security.TenantContextHolder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,10 +68,12 @@ public class TokenReplayJourneyTest {
         testUser.setPasswordHash(passwordEncoder.encode("Secure123!"));
         testUser.setStatus("ACTIVE");
         testUser = userRepository.save(testUser);
+        TenantContextHolder.setTenantId(tenantId);
     }
 
     @AfterEach
     void tearDown() {
+        TenantContextHolder.clear();
         sessionRepository.deleteAll();
         userRepository.deleteAll();
         organizationRepository.deleteAll();

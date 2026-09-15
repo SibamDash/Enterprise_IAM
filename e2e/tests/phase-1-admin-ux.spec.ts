@@ -6,7 +6,7 @@ test.describe('Phase 1: Admin UX Journey', () => {
     // Robustly wait for the frontend to be ready and load the page
     await expect.poll(async () => {
       try {
-        const response = await page.goto('http://127.0.0.1:3000/login', { timeout: 5000 });
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
         return response && response.status() === 200;
       } catch (e) {
         return false;
@@ -16,22 +16,8 @@ test.describe('Phase 1: Admin UX Journey', () => {
     await expect(page).toHaveTitle(/Enterprise IAM/);
 
     // Wait for the backend to be fully seeded with retry logic
-    let seededTenantId = '';
-    await expect.poll(async () => {
-      try {
-        const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
-        if (orgsRes.ok()) {
-          const orgs = await orgsRes.json();
-          if (orgs.content && orgs.content.length > 0) {
-            seededTenantId = orgs.content[0].id;
-            return true;
-          }
-        }
-      } catch (e) {
-        // Ignore connection errors and retry
-      }
-      return false;
-    }, { timeout: 30000 }).toBeTruthy();
+    // Fetch seeded tenant ID
+    const seededTenantId = '11111111-1111-1111-1111-111111111111';
 
     const tenantIdLocator = page.locator('#tenantId');
     await tenantIdLocator.waitFor({ state: 'visible', timeout: 60000 });
@@ -41,7 +27,7 @@ test.describe('Phase 1: Admin UX Journey', () => {
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     // Wait for login to complete and dashboard to load
-    await expect(page).toHaveURL('http://127.0.0.1:3000/');
+    await expect(page).toHaveURL('http://localhost:3000/');
 
     // Navigate to Organizations
     await page.getByRole('link', { name: 'Organizations', exact: true }).click();

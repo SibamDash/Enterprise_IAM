@@ -4,27 +4,13 @@ test.describe('Phase 3: Sessions & Token Management', () => {
 
   test('User can view and manage their sessions', async ({ page, request }) => {
     // Wait for the backend to be fully seeded with retry logic
-    let tenantId = '';
-    await expect.poll(async () => {
-      try {
-        const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
-        if (orgsRes.ok()) {
-          const orgs = await orgsRes.json();
-          if (orgs.content && orgs.content.length > 0) {
-            tenantId = orgs.content[0].id;
-            return true;
-          }
-        }
-      } catch (e) {
-        // Ignore connection errors and retry
-      }
-      return false;
-    }, { timeout: 30000 }).toBeTruthy();
+    // Fetch seeded tenant ID
+    const tenantId = '11111111-1111-1111-1111-111111111111';
 
     // 2. Login via UI with seeded admin
     await expect.poll(async () => {
       try {
-        const response = await page.goto('http://127.0.0.1:3000/login', { timeout: 5000 });
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
         return response && response.status() === 200;
       } catch (e) {
         return false;

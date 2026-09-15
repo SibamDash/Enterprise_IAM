@@ -2,26 +2,12 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Phase 2: Authentication', () => {
   test('should allow user to navigate to login and see errors for invalid credentials', async ({ page, request }) => {
-    // Wait for the backend to be fully seeded with retry logic
-    await expect.poll(async () => {
-      try {
-        const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
-        if (orgsRes.ok()) {
-          const orgs = await orgsRes.json();
-          if (orgs.content && orgs.content.length > 0) {
-            return true;
-          }
-        }
-      } catch (e) {
-        // Ignore connection errors and retry
-      }
-      return false;
-    }, { timeout: 30000 }).toBeTruthy();
+    // Note: Backend is assumed ready by CI
 
     // Robustly wait for the frontend to be ready and load the page
     await expect.poll(async () => {
       try {
-        const response = await page.goto('http://127.0.0.1:3000/login', { timeout: 5000 });
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
         return response && response.status() === 200;
       } catch (e) {
         return false;
@@ -45,25 +31,11 @@ test.describe('Phase 2: Authentication', () => {
   });
 
   test('should allow user to request a password reset', async ({ page, request }) => {
-    // Wait for the backend to be fully seeded with retry logic
-    await expect.poll(async () => {
-      try {
-        const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
-        if (orgsRes.ok()) {
-          const orgs = await orgsRes.json();
-          if (orgs.content && orgs.content.length > 0) {
-            return true;
-          }
-        }
-      } catch (e) {
-        // Ignore connection errors and retry
-      }
-      return false;
-    }, { timeout: 30000 }).toBeTruthy();
+    // Note: Backend is assumed ready by CI
 
     await expect.poll(async () => {
       try {
-        const response = await page.goto('http://127.0.0.1:3000/login', { timeout: 5000 });
+        const response = await page.goto('http://localhost:3000/login', { timeout: 5000 });
         return response && response.status() === 200;
       } catch (e) {
         return false;

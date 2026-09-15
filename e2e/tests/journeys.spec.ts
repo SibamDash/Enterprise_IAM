@@ -7,20 +7,7 @@ test.describe('Journey A: New Employee', () => {
     // these E2E tests are structured to run when the dev server is active manually.
 
     // 1. Fetch seeded tenant ID
-    let seededTenantId = '';
-    await expect.poll(async () => {
-      try {
-        const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
-        if (orgsRes.ok()) {
-          const orgs = await orgsRes.json();
-          if (orgs.content && orgs.content.length > 0) {
-            seededTenantId = orgs.content[0].id;
-            return true;
-          }
-        }
-      } catch (e) {}
-      return false;
-    }, { timeout: 30000 }).toBeTruthy();
+    const seededTenantId = '11111111-1111-1111-1111-111111111111';
 
     // 1. Admin login
     await page.goto('/login');
@@ -55,9 +42,7 @@ test.describe('Journey A: New Employee', () => {
 test.describe('Journeys B & C: Authorization', () => {
   test('should enforce role-based access control', async ({ page }) => {
     // 1. Fetch seeded tenant ID
-    const orgsRes = await page.request.get('http://127.0.0.1:8080/api/v1/organizations');
-    const orgs = await orgsRes.json();
-    const seededTenantId = orgs.content[0].id;
+    const seededTenantId = '11111111-1111-1111-1111-111111111111';
 
     // 2. Login with limited user
     await page.goto('/login');
@@ -79,9 +64,7 @@ test.describe('Journeys B & C: Authorization', () => {
 test.describe('Journey D: SSO', () => {
   test('should recognize existing session for SSO', async ({ page, context }) => {
     // 1. Fetch seeded tenant ID
-    const orgsRes = await page.request.get('http://127.0.0.1:8080/api/v1/organizations');
-    const orgs = await orgsRes.json();
-    const seededTenantId = orgs.content[0].id;
+    const seededTenantId = '11111111-1111-1111-1111-111111111111';
 
     // 2. User logs in
     await page.goto('/login');
@@ -108,12 +91,10 @@ test.describe('Journey E: Token replay', () => {
     // We send an API request here to test it.
     
     // 0. Fetch seeded tenant ID
-    const orgsRes = await request.get('http://127.0.0.1:8080/api/v1/organizations');
-    const orgs = await orgsRes.json();
-    const seededTenantId = orgs.content[0].id;
+    const seededTenantId = '11111111-1111-1111-1111-111111111111';
 
     // 1. Initial Login via API
-    const loginRes = await request.post('http://127.0.0.1:8080/api/v1/auth/login', {
+    const loginRes = await request.post('http://localhost:8080/api/v1/auth/login', {
       headers: {
         'X-Tenant-ID': seededTenantId
       },
@@ -127,7 +108,7 @@ test.describe('Journey E: Token replay', () => {
     const { refreshToken } = await loginRes.json();
     
     // 2. Refresh the token
-    const refreshRes = await request.post('http://127.0.0.1:8080/api/v1/auth/refresh', {
+    const refreshRes = await request.post('http://localhost:8080/api/v1/auth/refresh', {
       headers: {
         'X-Tenant-ID': seededTenantId
       },
@@ -138,7 +119,7 @@ test.describe('Journey E: Token replay', () => {
     expect(refreshRes.ok()).toBeTruthy();
     
     // 3. Token Replay (use the same original refresh token again)
-    const replayRes = await request.post('http://127.0.0.1:8080/api/v1/auth/refresh', {
+    const replayRes = await request.post('http://localhost:8080/api/v1/auth/refresh', {
       headers: {
         'X-Tenant-ID': seededTenantId
       },

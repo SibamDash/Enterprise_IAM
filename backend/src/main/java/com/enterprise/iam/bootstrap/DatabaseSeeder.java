@@ -33,6 +33,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             log.info("Database is empty. Seeding initial data...");
 
             Organization org = new Organization();
+            org.setId(java.util.UUID.fromString("11111111-1111-1111-1111-111111111111"));
             org.setName("Acme Corp");
             org.setStatus("ACTIVE");
             org = organizationRepository.save(org);

@@ -95,6 +95,7 @@ public class TokenReplayJourneyTest {
         
         String refreshRespJson = mockMvc.perform(post("/api/v1/auth/refresh")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .header("X-Tenant-ID", tenantId.toString())
                 .content(objectMapper.writeValueAsString(refreshReq)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
@@ -102,6 +103,7 @@ public class TokenReplayJourneyTest {
         // 3. Token Replay (Attempting to use the already consumed originalRefreshToken)
         mockMvc.perform(post("/api/v1/auth/refresh")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .header("X-Tenant-ID", tenantId.toString())
                 .content(objectMapper.writeValueAsString(refreshReq)))
                 .andExpect(status().isUnauthorized());
                 

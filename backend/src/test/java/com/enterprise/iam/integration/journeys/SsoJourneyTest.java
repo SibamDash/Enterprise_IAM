@@ -94,6 +94,7 @@ public class SsoJourneyTest {
         
         mockMvc.perform(post("/api/v1/auth/refresh")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .header("X-Tenant-ID", tenantId.toString())
                 .content(objectMapper.writeValueAsString(refreshReq)))
                 .andExpect(status().isOk());
     }

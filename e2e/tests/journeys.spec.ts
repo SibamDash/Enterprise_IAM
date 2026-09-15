@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 // Journey A — New employee
 test.describe('Journey A: New Employee', () => {
-  test('should allow admin to create user and new user to login', async ({ page }) => {
+  test('should allow admin to create user and new user to login', async ({ page, request }) => {
     // Note: Due to test environment limitations (Docker access missing),
     // these E2E tests are structured to run when the dev server is active manually.
 

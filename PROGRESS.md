@@ -16,6 +16,6 @@
 | 11    | Client Credentials + Service Accounts     | DONE        | 2026-09-08        | 607b1be              | -                  | -       |
 | 12    | Audit Logging + Security Events           | DONE        | 2026-09-08        | 564b0c0              | -                  | -       |
 | 13    | Security Controls                         | DONE        | -                 | -                    | -                  | -       |
-| 14    | Admin Dashboard                           | NOT_STARTED | -                 | -                    | -                  | -       |
+| 14    | Admin Dashboard                           | IN_PROGRESS | -                 | -                    | -                  | -       |
 | 15    | Testing & End-to-End Validation           | NOT_STARTED | -                 | -                    | -                  | -       |
 | 16    | Final System Verification & Release       | NOT_STARTED | -                 | -                    | -                  | -       |

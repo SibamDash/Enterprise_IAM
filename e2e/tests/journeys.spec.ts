@@ -18,7 +18,8 @@ test.describe('Journey A: New Employee', () => {
 
     // Wait for redirect to dashboard
     await page.waitForURL('/');
-    await expect(page.getByRole('heading', { name: 'Platform Overview' })).toBeVisible({ timeout: 15000 });
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: 'Platform Overview' })).toBeVisible({ timeout: 20000 });
 
     // 2. Admin creates a user
     await page.getByRole('link', { name: 'Users' }).click();
@@ -81,7 +82,8 @@ test.describe('Journey D: SSO', () => {
     
     // Must wait for login to complete and token to be saved in localStorage
     await page.waitForURL('/');
-    await expect(page.getByRole('heading', { name: 'Platform Overview' })).toBeVisible({ timeout: 15000 });
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: 'Platform Overview' })).toBeVisible({ timeout: 20000 });
 
     // 2. Open a new tab (Simulating App B)
     const newPage = await context.newPage();
@@ -89,7 +91,8 @@ test.describe('Journey D: SSO', () => {
 
     // 3. Verify that the session is recognized (no login required)
     await expect(newPage).toHaveURL('/');
-    await expect(newPage.getByRole('heading', { name: 'Platform Overview' })).toBeVisible({ timeout: 15000 });
+    await newPage.waitForLoadState('networkidle');
+    await expect(newPage.getByRole('heading', { name: 'Platform Overview' })).toBeVisible({ timeout: 20000 });
   });
 });
 

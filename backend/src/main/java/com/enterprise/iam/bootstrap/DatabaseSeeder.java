@@ -22,9 +22,10 @@ import java.util.HashSet;
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final OrganizationRepository organizationRepository;
-    private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final jakarta.persistence.EntityManager entityManager;
 
     @Override
     @Transactional
@@ -32,11 +33,15 @@ public class DatabaseSeeder implements CommandLineRunner {
         if (organizationRepository.count() == 0) {
             log.info("Database is empty. Seeding initial data...");
 
-            Organization org = new Organization();
-            org.setId(java.util.UUID.fromString("11111111-1111-1111-1111-111111111111"));
-            org.setName("Acme Corp");
-            org.setStatus("ACTIVE");
-            org = organizationRepository.save(org);
+            java.util.UUID orgId = java.util.UUID.fromString("11111111-1111-1111-1111-111111111111");
+            entityManager.createNativeQuery(
+                "INSERT INTO organizations (id, name, status, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
+                .setParameter(1, orgId)
+                .setParameter(2, "Acme Corp")
+                .setParameter(3, "ACTIVE")
+                .executeUpdate();
+
+            Organization org = entityManager.find(Organization.class, orgId);
 
             Role superAdminRole = new Role();
             superAdminRole.setOrganizationId(org.getId());

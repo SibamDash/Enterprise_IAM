@@ -28,16 +28,19 @@ test.describe('Journey A: New Employee', () => {
     // Link to create new user
     await page.getByRole('link', { name: 'Create User' }).click();
     
+    // Use dynamic email to avoid conflicts on test retries
+    const uniqueEmail = `john.doe.${Date.now()}@example.com`;
+    
     // Wait for modal or form to open
     await page.locator('input[id="firstName"]').waitFor({ state: 'visible', timeout: 10000 });
     await page.locator('input[id="firstName"]').fill('John');
     await page.locator('input[id="lastName"]').fill('Doe');
-    await page.locator('input[id="email"]').fill('john.doe.journeyA@example.com'); // Unique email
+    await page.locator('input[id="email"]').fill(uniqueEmail); 
     await page.getByRole('button', { name: 'Create User' }).click();
 
     // Expect user to be created successfully (wait for redirect to /users and visibility in table)
     await page.waitForURL('/users');
-    await expect(page.locator('text=john.doe.journeyA@example.com')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator(`text=${uniqueEmail}`)).toBeVisible({ timeout: 10000 });
 
     // 3. Admin logs out
     await page.getByRole('button', { name: 'Logout' }).click();

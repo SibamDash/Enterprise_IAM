@@ -34,11 +34,21 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return <div className="dashboard-loading">Loading metrics...</div>;
+    return (
+      <div className="dashboard-container">
+        <h1 className="dashboard-title">Platform Overview</h1>
+        <div className="dashboard-loading" style={{ marginTop: '2rem' }}>Loading metrics...</div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="dashboard-error">Error: {error}</div>;
+    return (
+      <div className="dashboard-container">
+        <h1 className="dashboard-title">Platform Overview</h1>
+        <div className="dashboard-error" style={{ marginTop: '2rem' }}>Error: {error}</div>
+      </div>
+    );
   }
 
   return (

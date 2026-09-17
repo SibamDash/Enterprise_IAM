@@ -72,10 +72,3 @@ To run the automated UI journeys (A-E):
 cd frontend
 npx playwright test
 ```
-
----
-
-## Known Issues & Limitations
-
-1. **Docker Environment Constraints on Windows Agents**: If you are developing this on a Windows IDE agent environment (e.g., using WSL2 but without the Docker Daemon socket exposed to the agent), automated scripts that rely on Testcontainers or `docker compose` might fail during execution by the agent. You must execute `./scripts/run-all-tests.sh` and `docker compose up` manually on your host machine to verify the stack.
-2. **SMTP Integration**: MFA and password reset emails are currently mocked or stubbed out (output to logs). A real SMTP provider configuration is needed for production environments.
